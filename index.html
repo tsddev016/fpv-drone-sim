@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#0a0a0a" />
   <title>FPV Drone Sim 3D Pro</title>
   <style>
@@ -24,40 +24,50 @@
     #stick-left { left: 20px; } #stick-right { right: 20px; }
     .stick-knob { position: absolute; width: 58px; height: 58px; border-radius: 50%; background: rgba(0,255,120,0.8); border: 2px solid #0f0; top: 50%; left: 50%; transform: translate(-50%, -50%); }
     .stick-label { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 10px; color: rgba(0,255,100,0.6); font-family: monospace; white-space: nowrap; }
-    #btn-reset, #btn-mode, #btn-menu, #btn-cam {
-      position: fixed; pointer-events: auto; background: rgba(0,0,0,0.65); color: #0f0;
-      border: 1px solid rgba(0,255,100,0.5); border-radius: 8px; padding: 10px 14px;
-      font-size: 12px; font-family: monospace; z-index: 15;
-    }
+    #btn-reset, #btn-mode, #btn-menu, #btn-cam { position: fixed; pointer-events: auto; background: rgba(0,0,0,0.65); color: #0f0; border: 1px solid rgba(0,255,100,0.5); border-radius: 8px; padding: 10px 14px; font-size: 12px; font-family: monospace; z-index: 15; }
     #btn-reset { top: 12px; left: 50%; transform: translateX(-50%); }
     #btn-mode { bottom: 200px; right: 16px; }
     #btn-menu { bottom: 200px; left: 16px; }
     #btn-cam { bottom: 250px; right: 16px; }
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #0f0; overflow-y: auto; padding: 20px; }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #0f0; overflow-y: auto; padding: 16px; }
     .overlay.hidden { display: none !important; }
-    .menu-panel { background: rgba(0,25,10,0.7); border: 1px solid rgba(0,255,100,0.25); border-radius: 16px; padding: 28px 24px; max-width: 380px; width: 100%; }
-    .menu-panel h1 { font-size: 26px; letter-spacing: 3px; text-align: center; margin-bottom: 6px; }
-    .menu-panel .subtitle { text-align: center; font-size: 12px; opacity: 0.65; margin-bottom: 22px; }
+    .menu-panel { background: rgba(0,25,10,0.75); border: 1px solid rgba(0,255,100,0.25); border-radius: 16px; padding: 22px 18px; max-width: 380px; width: 100%; }
+    .menu-panel h1 { font-size: 24px; letter-spacing: 2px; text-align: center; margin-bottom: 4px; }
+    .menu-panel .subtitle { text-align: center; font-size: 12px; opacity: 0.65; margin-bottom: 16px; }
     .menu-btn { display: block; width: 100%; background: linear-gradient(180deg, #0f0, #0a0); color: #000; border: none; padding: 14px 20px; font-size: 15px; font-weight: 700; border-radius: 10px; cursor: pointer; margin: 8px 0; font-family: monospace; }
     .menu-btn.secondary { background: transparent; color: #0f0; border: 1px solid rgba(0,255,100,0.4); }
-    .menu-section { margin: 18px 0 10px; font-size: 13px; opacity: 0.8; border-bottom: 1px solid rgba(0,255,100,0.15); padding-bottom: 4px; }
-    .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 13px; border-bottom: 1px solid rgba(0,255,100,0.08); }
+    .menu-section { margin: 14px 0 8px; font-size: 12px; opacity: 0.8; border-bottom: 1px solid rgba(0,255,100,0.15); padding-bottom: 4px; }
+    .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 12px; border-bottom: 1px solid rgba(0,255,100,0.08); gap: 8px; }
     .setting-row label { flex: 1; }
-    .setting-row select, .setting-row input[type=range] { background: #111; color: #0f0; border: 1px solid rgba(0,255,100,0.3); border-radius: 6px; padding: 6px 10px; font-family: monospace; font-size: 12px; max-width: 140px; }
-    .setting-row input[type=range] { width: 120px; accent-color: #0f0; }
-    .setting-row .value { min-width: 40px; text-align: right; font-size: 12px; opacity: 0.8; }
-    .map-grid, .drone-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
-    .map-card, .drone-card { background: rgba(0,40,15,0.6); border: 2px solid rgba(0,255,100,0.2); border-radius: 10px; padding: 14px 10px; text-align: center; cursor: pointer; font-size: 12px; }
+    .setting-row select, .setting-row input[type=range] { background: #111; color: #0f0; border: 1px solid rgba(0,255,100,0.3); border-radius: 6px; padding: 5px 8px; font-family: monospace; font-size: 12px; max-width: 130px; }
+    .setting-row input[type=range] { width: 110px; accent-color: #0f0; }
+    .setting-row .value { min-width: 36px; text-align: right; font-size: 11px; opacity: 0.8; }
+    .map-grid, .drone-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+    .map-card, .drone-card { background: rgba(0,40,15,0.6); border: 2px solid rgba(0,255,100,0.2); border-radius: 10px; padding: 12px 8px; text-align: center; cursor: pointer; font-size: 12px; }
     .map-card.selected, .drone-card.selected { border-color: #0f0; background: rgba(0,60,20,0.8); }
-    .map-card .icon, .drone-card .icon { font-size: 28px; margin-bottom: 6px; }
-    .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-    .swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
-    .swatch.selected { border-color: #fff; transform: scale(1.15); }
-    .back-btn { background: transparent; color: #0f0; border: 1px solid rgba(0,255,100,0.3); padding: 10px 20px; border-radius: 8px; font-family: monospace; font-size: 13px; cursor: pointer; margin-top: 16px; width: 100%; }
+    .map-card .icon, .drone-card .icon { font-size: 24px; margin-bottom: 4px; }
+    .color-swatches { display: flex; gap: 6px; flex-wrap: wrap; }
+    .swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+    .swatch.selected { border-color: #fff; transform: scale(1.12); }
+    .back-btn { background: transparent; color: #0f0; border: 1px solid rgba(0,255,100,0.3); padding: 10px 20px; border-radius: 8px; font-family: monospace; font-size: 13px; cursor: pointer; margin-top: 14px; width: 100%; }
     .hidden { display: none !important; }
     #loading { position: fixed; inset: 0; background: #000; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #0f0; font-family: monospace; }
     #loading .spinner { width: 40px; height: 40px; border: 3px solid rgba(0,255,100,0.2); border-top-color: #0f0; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    #drone-menu .menu-panel { max-width: 760px; }
+    .shop-layout { display: flex; flex-direction: row; gap: 12px; width: 100%; align-items: stretch; flex-wrap: wrap; justify-content: center; }
+    #drone-preview-wrap { width: 260px; height: 260px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0,255,100,0.25); border-radius: 12px; position: relative; overflow: hidden; flex-shrink: 0; }
+    #drone-preview-wrap canvas { width: 100% !important; height: 100% !important; display: block; }
+    #drone-preview-hint { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font-size: 10px; opacity: 0.55; pointer-events: none; }
+    #drone-shop-panel { flex: 1; min-width: 220px; max-height: 70vh; overflow-y: auto; }
+    .shop-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .shop-tab { background: transparent; color: #0f0; border: 1px solid rgba(0,255,100,0.3); border-radius: 8px; padding: 6px 10px; font-size: 11px; font-family: monospace; cursor: pointer; }
+    .shop-tab.active { background: rgba(0,255,100,0.2); border-color: #0f0; }
+    .shop-option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 12px; }
+    .shop-option { background: rgba(0,40,15,0.5); border: 2px solid rgba(0,255,100,0.15); border-radius: 8px; padding: 10px 8px; text-align: center; cursor: pointer; font-size: 11px; }
+    .shop-option.selected { border-color: #0f0; background: rgba(0,60,20,0.75); }
+    .shop-option .t { font-weight: bold; display: block; margin-bottom: 2px; }
+    .shop-option .d { font-size: 10px; opacity: 0.55; }
   </style>
 </head>
 <body>
@@ -79,7 +89,7 @@
       <div id="map-name">RACING</div>
     </div>
     <div class="center" id="msg"></div>
-    <div class="bottom"><div id="hint">POTENCIA no stick esquerdo | C = camera 3D</div></div>
+    <div class="bottom"><div id="hint">POTENCIA no stick esquerdo | C = camera</div></div>
   </div>
   <div id="touch-controls">
     <div class="stick-base" id="stick-left"><div class="stick-knob" id="knob-left"></div><div class="stick-label">POTENCIA / YAW</div></div>
@@ -92,11 +102,11 @@
   <div id="main-menu" class="overlay">
     <div class="menu-panel">
       <h1>FPV DRONE SIM</h1>
-      <div class="subtitle">Fisica real · Camera FPV/3D · Celular & Desktop</div>
+      <div class="subtitle">Loja 3D · Fisica real · Celular & PC</div>
       <button class="menu-btn" id="btn-play">JOGAR</button>
       <button class="menu-btn secondary" id="btn-maps">MAPAS</button>
-      <button class="menu-btn secondary" id="btn-drone">MEU DRONE</button>
-      <button class="menu-btn secondary" id="btn-settings">CONFIGURACOES</button>
+      <button class="menu-btn secondary" id="btn-drone">LOJA DO DRONE</button>
+      <button class="menu-btn secondary" id="btn-settings">CONFIG</button>
       <button class="menu-btn secondary" id="btn-about">SOBRE</button>
     </div>
   </div>
@@ -105,14 +115,51 @@
   </div>
   <div id="drone-menu" class="overlay hidden">
     <div class="menu-panel">
-      <h1>MEU DRONE</h1>
-      <div class="drone-grid" id="drone-grid"></div>
-      <div class="setting-row"><label>Corpo</label><div class="color-swatches" id="body-colors"></div></div>
-      <div class="setting-row"><label>Bracos</label><div class="color-swatches" id="arm-colors"></div></div>
-      <div class="setting-row"><label>Helices</label><div class="color-swatches" id="prop-colors"></div></div>
-      <div class="setting-row"><label>Potencia</label><input type="range" id="cfg-thrust" min="12" max="30" value="22" /><span class="value" id="val-thrust">22N</span></div>
-      <div class="setting-row"><label>Peso</label><input type="range" id="cfg-mass" min="0.3" max="0.9" step="0.05" value="0.55" /><span class="value" id="val-mass">0.55kg</span></div>
-      <button class="back-btn" data-back="main-menu">VOLTAR</button>
+      <h1>LOJA DO DRONE</h1>
+      <div class="subtitle">Preview 3D · arraste para girar</div>
+      <div class="shop-layout">
+        <div id="drone-preview-wrap">
+          <canvas id="drone-preview-canvas"></canvas>
+          <div id="drone-preview-hint">arraste para girar</div>
+        </div>
+        <div id="drone-shop-panel">
+          <div class="shop-tabs">
+            <button class="shop-tab active" data-shop="body">Corpo</button>
+            <button class="shop-tab" data-shop="size">Tamanho</button>
+            <button class="shop-tab" data-shop="colors">Cores</button>
+            <button class="shop-tab" data-shop="cam">Camera</button>
+            <button class="shop-tab" data-shop="stickers">Adesivos</button>
+            <button class="shop-tab" data-shop="extra">Extras</button>
+          </div>
+          <div id="shop-body" class="shop-section">
+            <div class="menu-section">Modelo do corpo</div>
+            <div class="shop-option-grid" id="shop-body-grid"></div>
+            <div class="menu-section">Presets</div>
+            <div class="drone-grid" id="drone-grid"></div>
+          </div>
+          <div id="shop-size" class="shop-section hidden">
+            <div class="setting-row"><label>Tamanho</label><input type="range" id="cfg-scale" min="0.7" max="1.4" step="0.05" value="1.0" /><span class="value" id="val-scale">1.0x</span></div>
+            <div class="setting-row"><label>RPM helices</label><input type="range" id="cfg-prop-spin" min="0.5" max="2" step="0.1" value="1.0" /><span class="value" id="val-prop-spin">1.0x</span></div>
+            <div class="setting-row"><label>Potencia</label><input type="range" id="cfg-thrust" min="12" max="30" value="22" /><span class="value" id="val-thrust">22N</span></div>
+            <div class="setting-row"><label>Peso</label><input type="range" id="cfg-mass" min="0.3" max="0.9" step="0.05" value="0.55" /><span class="value" id="val-mass">0.55kg</span></div>
+          </div>
+          <div id="shop-colors" class="shop-section hidden">
+            <div class="setting-row"><label>Corpo</label><div class="color-swatches" id="body-colors"></div></div>
+            <div class="setting-row"><label>Bracos</label><div class="color-swatches" id="arm-colors"></div></div>
+            <div class="setting-row"><label>Helices</label><div class="color-swatches" id="prop-colors"></div></div>
+          </div>
+          <div id="shop-cam" class="shop-section hidden">
+            <div class="shop-option-grid" id="shop-cam-grid"></div>
+          </div>
+          <div id="shop-stickers" class="shop-section hidden">
+            <div class="shop-option-grid" id="shop-sticker-grid"></div>
+          </div>
+          <div id="shop-extra" class="shop-section hidden">
+            <div class="shop-option-grid" id="shop-extra-grid"></div>
+          </div>
+        </div>
+      </div>
+      <button class="back-btn" data-back="main-menu" id="btn-shop-back">VOLTAR / APLICAR</button>
     </div>
   </div>
   <div id="settings-menu" class="overlay hidden">
@@ -132,13 +179,7 @@
   <div id="about-menu" class="overlay hidden">
     <div class="menu-panel">
       <h1>SOBRE</h1>
-      <p style="font-size:13px;line-height:1.5;opacity:0.85;margin:12px 0">
-        Stick esquerdo = POTENCIA dos motores (nao sobe sozinho).<br>
-        Incline com o direito para ir pra frente/tras/lado.<br>
-        ~50% throttle = hover nivelado.<br>
-        C = troca camera FPV / 3D<br>
-        R = Reset | M = Acro/Angle
-      </p>
+      <p style="font-size:13px;line-height:1.5;opacity:0.85;margin:12px 0">Stick esquerdo = potencia. Incline o direito para ir. C = camera. Loja com preview 3D.</p>
       <button class="back-btn" data-back="main-menu">VOLTAR</button>
     </div>
   </div>
