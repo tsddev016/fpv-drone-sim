@@ -1,3 +1,5 @@
+// carrega profile se ainda nao estiver no DOM
+(function(){if(window.FPVProfile)return;var s=document.createElement('script');s.src='profile.js';document.head.appendChild(s);})();
 (function() {
   window.__FPV_PAD_INPUT = { throttle: 0, yaw: 0, pitch: 0, roll: 0, connected: false, name: '' };
   function dz(v, d) {
