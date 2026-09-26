@@ -48,187 +48,62 @@
     .swatch.selected { border-color: #fff; transform: scale(1.12); }
     .back-btn { background: transparent; color: #0f0; border: 1px solid rgba(0,255,100,0.3); padding: 10px 20px; border-radius: 8px; font-family: monospace; font-size: 13px; cursor: pointer; margin-top: 14px; width: 100%; }
     .hidden { display: none !important; }
-
-    /* Loading premium */
-    #loading {
-      position: fixed; inset: 0; z-index: 200;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: radial-gradient(ellipse at 50% 30%, #0a2a18 0%, #020806 55%, #000 100%);
-      color: #9fefb0; font-family: 'Segoe UI', system-ui, monospace;
-      overflow: hidden;
-    }
-    #loading::before {
-      content: ''; position: absolute; inset: -20%;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,100,0.03) 2px, rgba(0,255,100,0.03) 4px);
-      animation: scan 8s linear infinite; pointer-events: none;
-    }
-    @keyframes scan { to { transform: translateY(40px); } }
-    #loading .logo-ring {
-      width: 88px; height: 88px; border-radius: 50%;
-      border: 2px solid rgba(0,255,120,0.25);
-      box-shadow: 0 0 40px rgba(0,255,100,0.15), inset 0 0 20px rgba(0,255,100,0.08);
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 20px; position: relative;
-    }
-    #loading .logo-ring::after {
-      content: ''; position: absolute; inset: -6px; border-radius: 50%;
-      border: 2px solid transparent; border-top-color: #0f8; border-right-color: #0f8;
-      animation: spin 1s linear infinite;
-    }
-    #loading .logo-icon { font-size: 36px; filter: drop-shadow(0 0 12px #0f8); }
-    #loading .title {
-      font-size: 22px; font-weight: 700; letter-spacing: 4px; color: #fff;
-      text-shadow: 0 0 20px rgba(0,255,120,0.4); margin-bottom: 6px;
-    }
-    #loading .sub { font-size: 12px; opacity: 0.55; margin-bottom: 28px; letter-spacing: 1px; }
-    #loading .bar-wrap {
-      width: min(280px, 70vw); height: 4px; background: rgba(0,255,100,0.12);
-      border-radius: 4px; overflow: hidden; margin-bottom: 12px;
-    }
-    #loading .bar {
-      height: 100%; width: 0%; background: linear-gradient(90deg, #0a8, #0f8, #8f8);
-      border-radius: 4px; transition: width 0.3s ease;
-      box-shadow: 0 0 12px rgba(0,255,120,0.5);
-    }
-    #loading .tip { font-size: 11px; opacity: 0.45; max-width: 280px; text-align: center; line-height: 1.4; min-height: 32px; }
+    #loading { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 30%, #0a2a18 0%, #020806 55%, #000 100%); color: #9fefb0; font-family: monospace; overflow: hidden; }
+    #loading .logo-ring { width: 88px; height: 88px; border-radius: 50%; border: 2px solid rgba(0,255,120,0.25); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; position: relative; }
+    #loading .logo-ring::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid transparent; border-top-color: #0f8; border-right-color: #0f8; animation: spin 1s linear infinite; }
+    #loading .logo-icon { font-size: 36px; }
+    #loading .title { font-size: 22px; font-weight: 700; letter-spacing: 4px; color: #fff; margin-bottom: 6px; }
+    #loading .sub { font-size: 12px; opacity: 0.55; margin-bottom: 28px; }
+    #loading .bar-wrap { width: min(280px, 70vw); height: 4px; background: rgba(0,255,100,0.12); border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
+    #loading .bar { height: 100%; width: 0%; background: linear-gradient(90deg, #0a8, #0f8, #8f8); transition: width 0.3s; }
+    #loading .tip { font-size: 11px; opacity: 0.45; text-align: center; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Main menu premium */
-    #main-menu .menu-panel {
-      background: linear-gradient(160deg, rgba(8,28,16,0.95), rgba(2,10,6,0.98));
-      border: 1px solid rgba(0,255,120,0.22);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(0,255,100,0.06);
-      border-radius: 20px; padding: 28px 24px; max-width: 360px;
-    }
-    #main-menu h1 {
-      font-size: 26px; letter-spacing: 3px; background: linear-gradient(90deg,#8f8,#0f8);
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-      margin: 0 0 4px; text-align: center;
-    }
-    #main-menu .subtitle { text-align: center; font-size: 11px; opacity: 0.5; margin-bottom: 20px; letter-spacing: 1px; }
-    #main-menu .menu-btn {
-      display: block; width: 100%; margin: 8px 0; padding: 14px 16px;
-      border-radius: 12px; border: 1px solid rgba(0,255,100,0.3);
-      background: linear-gradient(180deg, rgba(0,60,30,0.6), rgba(0,30,15,0.7));
-      color: #cfc; font-family: inherit; font-size: 14px; font-weight: 600;
-      cursor: pointer; letter-spacing: 1px; transition: 0.15s;
-    }
-    #main-menu .menu-btn:hover, #main-menu .menu-btn:active {
-      border-color: #0f8; background: linear-gradient(180deg, rgba(0,90,40,0.7), rgba(0,50,25,0.8));
-      box-shadow: 0 0 20px rgba(0,255,100,0.15); transform: translateY(-1px);
-    }
-    #main-menu .menu-btn.secondary {
-      background: transparent; border-color: rgba(0,255,100,0.18); font-weight: 500; font-size: 13px;
-    }
-    #main-menu .menu-btn.tutorial-btn {
-      border-color: rgba(80,180,255,0.4);
-      background: linear-gradient(180deg, rgba(20,50,90,0.55), rgba(10,25,50,0.7));
-      color: #bde;
-    }
-    #main-menu .menu-btn.walk-btn {
-      border-color: rgba(255,180,60,0.35);
-      background: linear-gradient(180deg, rgba(60,40,10,0.5), rgba(30,20,5,0.7));
-      color: #fec;
-    }
-
-    /* Tutorial panel */
-    #tutorial-hud {
-      position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
-      z-index: 50; max-width: min(420px, 92vw); width: 100%;
-      pointer-events: none; display: none;
-    }
+    #main-menu .menu-panel { background: linear-gradient(160deg, rgba(8,28,16,0.95), rgba(2,10,6,0.98)); border: 1px solid rgba(0,255,120,0.22); border-radius: 20px; padding: 28px 24px; max-width: 360px; }
+    #main-menu h1 { font-size: 26px; letter-spacing: 3px; background: linear-gradient(90deg,#8f8,#0f8); -webkit-background-clip: text; background-clip: text; color: transparent; text-align: center; }
+    #main-menu .subtitle { text-align: center; font-size: 11px; opacity: 0.5; margin-bottom: 20px; }
+    #main-menu .menu-btn { display: block; width: 100%; margin: 8px 0; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(0,255,100,0.3); background: linear-gradient(180deg, rgba(0,60,30,0.6), rgba(0,30,15,0.7)); color: #cfc; font-size: 14px; font-weight: 600; cursor: pointer; }
+    #main-menu .menu-btn.secondary { background: transparent; border-color: rgba(0,255,100,0.18); }
+    #main-menu .menu-btn.tutorial-btn { border-color: rgba(80,180,255,0.4); background: linear-gradient(180deg, rgba(20,50,90,0.55), rgba(10,25,50,0.7)); color: #bde; }
+    #main-menu .menu-btn.walk-btn { border-color: rgba(255,180,60,0.35); background: linear-gradient(180deg, rgba(60,40,10,0.5), rgba(30,20,5,0.7)); color: #fec; }
+    #tutorial-hud { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 50; max-width: min(420px, 92vw); width: 100%; pointer-events: none; display: none; }
     #tutorial-hud.show { display: block; }
-    #tutorial-hud .card {
-      background: linear-gradient(160deg, rgba(6,22,40,0.92), rgba(2,10,20,0.95));
-      border: 1px solid rgba(80,160,255,0.35); border-radius: 14px;
-      padding: 12px 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.45);
-      pointer-events: auto;
-    }
-    #tutorial-hud .step-num { font-size: 10px; color: #6af; letter-spacing: 2px; margin-bottom: 4px; }
-    #tutorial-hud .step-title { font-size: 15px; font-weight: 700; color: #eef; margin-bottom: 4px; }
-    #tutorial-hud .step-desc { font-size: 12px; color: rgba(200,220,255,0.7); line-height: 1.4; margin-bottom: 8px; }
-    #tutorial-hud .progress-bar {
-      height: 4px; background: rgba(80,160,255,0.15); border-radius: 4px; overflow: hidden;
-    }
-    #tutorial-hud .progress-fill {
-      height: 100%; width: 0%; background: linear-gradient(90deg,#48f,#8cf);
-      transition: width 0.3s; border-radius: 4px;
-    }
+    #tutorial-hud .card { background: linear-gradient(160deg, rgba(6,22,40,0.92), rgba(2,10,20,0.95)); border: 1px solid rgba(80,160,255,0.35); border-radius: 14px; padding: 12px 16px; pointer-events: auto; }
+    #tutorial-hud .step-num { font-size: 10px; color: #6af; letter-spacing: 2px; }
+    #tutorial-hud .step-title { font-size: 15px; font-weight: 700; color: #eef; }
+    #tutorial-hud .step-desc { font-size: 12px; color: rgba(200,220,255,0.7); margin-bottom: 8px; }
+    #tutorial-hud .progress-bar { height: 4px; background: rgba(80,160,255,0.15); border-radius: 4px; overflow: hidden; }
+    #tutorial-hud .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg,#48f,#8cf); }
     #tutorial-hud .obj { font-size: 11px; color: #8cf; margin-top: 6px; }
-
-    #btn-deploy {
-      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-      z-index: 40; display: none;
-      padding: 14px 28px; border-radius: 40px;
-      border: 2px solid rgba(255,180,60,0.6);
-      background: linear-gradient(180deg, rgba(80,50,10,0.9), rgba(40,25,5,0.95));
-      color: #ffd080; font-weight: 700; font-size: 14px; letter-spacing: 1px;
-      cursor: pointer; box-shadow: 0 0 24px rgba(255,160,40,0.25);
-      font-family: inherit;
-    }
+    #btn-deploy { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 40; display: none; padding: 14px 28px; border-radius: 40px; border: 2px solid rgba(255,180,60,0.6); background: linear-gradient(180deg, rgba(80,50,10,0.9), rgba(40,25,5,0.95)); color: #ffd080; font-weight: 700; font-size: 14px; cursor: pointer; }
     #btn-deploy.show { display: block; }
-    #btn-deploy:active { transform: translateX(-50%) scale(0.96); }
-
-    #cutscene {
-      position: fixed; inset: 0; z-index: 90; display: none;
-      background: rgba(0,0,0,0.35); pointer-events: none;
-      align-items: flex-end; justify-content: center; padding-bottom: 18vh;
-    }
+    #cutscene { position: fixed; inset: 0; z-index: 90; display: none; background: rgba(0,0,0,0.35); pointer-events: none; align-items: flex-end; justify-content: center; padding-bottom: 18vh; }
     #cutscene.show { display: flex; }
-    #cutscene .caption {
-      background: rgba(0,0,0,0.75); border: 1px solid rgba(255,200,100,0.3);
-      border-radius: 10px; padding: 12px 20px; color: #ffe8c0; font-size: 14px;
-      max-width: 90vw; text-align: center;
-    }
-
-    #drone-menu .menu-panel {
-      max-width: 820px; width: 95vw;
-      background: linear-gradient(165deg, rgba(10,30,18,0.96), rgba(2,12,8,0.98));
-      border: 1px solid rgba(0,255,120,0.25);
-      border-radius: 18px;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.55), 0 0 50px rgba(0,255,100,0.06);
-    }
-    #drone-menu h1 {
-      background: linear-gradient(90deg, #9f8, #0f8);
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-      letter-spacing: 3px;
-    }
-    #drone-menu .shop-layout {
-      display: flex; flex-direction: row; gap: 16px; max-width: 780px; width: 100%;
-      align-items: stretch; flex-wrap: wrap; justify-content: center;
-    }
-    #drone-preview-wrap {
-      width: 280px; height: 280px; background: rgba(0,0,0,0.5);
-      border: 1px solid rgba(0,255,100,0.25); border-radius: 12px;
-      position: relative; overflow: hidden; flex-shrink: 0;
-    }
+    #cutscene .caption { background: rgba(0,0,0,0.75); border: 1px solid rgba(255,200,100,0.3); border-radius: 10px; padding: 12px 20px; color: #ffe8c0; font-size: 14px; max-width: 90vw; text-align: center; }
+    #session-menu .menu-panel { max-width: 360px; }
+    #session-code { width: 100%; padding: 14px 16px; font-size: 22px; letter-spacing: 4px; text-align: center; text-transform: uppercase; font-family: monospace; background: rgba(0,0,0,0.5); border: 2px solid rgba(0,255,120,0.35); border-radius: 12px; color: #0f8; outline: none; margin: 12px 0 6px; }
+    #session-code:focus { border-color: #0f8; box-shadow: 0 0 16px rgba(0,255,120,0.2); }
+    #session-error { color: #f66; font-size: 12px; min-height: 18px; text-align: center; }
+    #session-hint { font-size: 11px; opacity: 0.5; text-align: center; line-height: 1.4; margin-bottom: 8px; }
+    .session-row { display: flex; gap: 8px; margin-top: 8px; }
+    .session-row .menu-btn { flex: 1; margin: 0; }
+    #drone-menu .menu-panel { max-width: 820px; width: 95vw; background: linear-gradient(165deg, rgba(10,30,18,0.96), rgba(2,12,8,0.98)); border: 1px solid rgba(0,255,120,0.25); border-radius: 18px; }
+    #drone-menu h1 { background: linear-gradient(90deg, #9f8, #0f8); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: 3px; }
+    #drone-menu .shop-layout { display: flex; flex-direction: row; gap: 16px; max-width: 780px; width: 100%; flex-wrap: wrap; justify-content: center; }
+    #drone-preview-wrap { width: 280px; height: 280px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0,255,100,0.25); border-radius: 12px; position: relative; overflow: hidden; flex-shrink: 0; }
     #drone-preview-wrap canvas { width: 100% !important; height: 100% !important; display: block; }
-    #drone-preview-hint {
-      position: absolute; bottom: 8px; left: 0; right: 0; text-align: center;
-      font-size: 10px; opacity: 0.55; pointer-events: none;
-    }
-    #drone-shop-panel {
-      flex: 1; min-width: 240px; max-height: 70vh; overflow-y: auto;
-      padding-right: 4px;
-    }
+    #drone-preview-hint { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font-size: 10px; opacity: 0.55; }
+    #drone-shop-panel { flex: 1; min-width: 240px; max-height: 70vh; overflow-y: auto; }
     .shop-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-    .shop-tab {
-      background: transparent; color: #0f0; border: 1px solid rgba(0,255,100,0.3);
-      border-radius: 8px; padding: 6px 10px; font-size: 11px; font-family: monospace; cursor: pointer;
-    }
+    .shop-tab { background: transparent; color: #0f0; border: 1px solid rgba(0,255,100,0.3); border-radius: 8px; padding: 6px 10px; font-size: 11px; font-family: monospace; cursor: pointer; }
     .shop-tab.active { background: rgba(0,255,100,0.2); border-color: #0f0; }
     .shop-option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 14px; }
-    .shop-option {
-      background: rgba(0,40,15,0.5); border: 2px solid rgba(0,255,100,0.15);
-      border-radius: 8px; padding: 10px 8px; text-align: center; cursor: pointer; font-size: 11px;
-    }
+    .shop-option { background: rgba(0,40,15,0.5); border: 2px solid rgba(0,255,100,0.15); border-radius: 8px; padding: 10px 8px; text-align: center; cursor: pointer; font-size: 11px; }
     .shop-option.selected { border-color: #0f0; background: rgba(0,60,20,0.75); }
     .shop-option .t { font-weight: bold; display: block; margin-bottom: 2px; }
     .shop-option .d { font-size: 10px; opacity: 0.55; }
   </style>
 </head>
 <body>
-
   <div id="loading">
     <div class="logo-ring"><div class="logo-icon">🚁</div></div>
     <div class="title">FPV DRONE SIM</div>
@@ -236,16 +111,14 @@
     <div class="bar-wrap"><div class="bar" id="load-bar"></div></div>
     <div class="tip" id="load-tip">Inicializando motores...</div>
   </div>
-
   <div id="canvas-container"></div>
   <div id="crosshair"><div class="dot"></div></div>
-
   <div id="hud" class="hidden">
     <div class="top-left">
       <div>ALT <span id="alt">0.0</span> m</div>
       <div>SPD <span id="spd">0.0</span> m/s</div>
       <div>THR <span id="thr">0</span>%</div>
-      <div class="battery" id="battery">BAT 100%</div>
+      <div id="battery">BAT 100%</div>
     </div>
     <div class="top-right">
       <div id="mode-label">ACRO</div>
@@ -255,27 +128,16 @@
       <div id="map-name">RACING</div>
     </div>
     <div class="center" id="msg"></div>
-    <div class="bottom">
-      <div id="hint">FPV DRONE SIM PRO</div>
-    </div>
+    <div class="bottom"><div id="hint">FPV DRONE SIM PRO</div></div>
   </div>
-
   <div id="touch-controls">
-    <div class="stick-base" id="stick-left">
-      <div class="stick-knob" id="knob-left"></div>
-      <div class="stick-label">MOVER</div>
-    </div>
-    <div class="stick-base" id="stick-right">
-      <div class="stick-knob" id="knob-right"></div>
-      <div class="stick-label">INCLINAR</div>
-    </div>
+    <div class="stick-base" id="stick-left"><div class="stick-knob" id="knob-left"></div><div class="stick-label">MOVER</div></div>
+    <div class="stick-base" id="stick-right"><div class="stick-knob" id="knob-right"></div><div class="stick-label">INCLINAR</div></div>
   </div>
-
   <button id="btn-reset" class="hidden">RESET</button>
   <button id="btn-mode" class="hidden">MODO: ACRO</button>
   <button id="btn-menu" class="hidden">MENU</button>
   <button id="btn-cam" class="hidden">CAM: FPV</button>
-
   <div id="main-menu" class="overlay">
     <div class="menu-panel">
       <h1>FPV DRONE SIM</h1>
@@ -289,7 +151,18 @@
       <button class="menu-btn secondary" id="btn-about">ℹ SOBRE</button>
     </div>
   </div>
-
+  <div id="session-menu" class="overlay hidden">
+    <div class="menu-panel">
+      <h1>SESSÃO</h1>
+      <div class="subtitle">Código da sala (até 8 letras)</div>
+      <p id="session-hint">Só letras (A–Z). Sem números. Crie ou entre numa sala. Opcional: jogar solo.</p>
+      <input id="session-code" type="text" maxlength="8" placeholder="ABCXYZ" autocomplete="off" spellcheck="false" />
+      <div id="session-error"></div>
+      <div class="session-row"><button class="menu-btn" id="btn-session-go">ENTRAR / CRIAR</button></div>
+      <button class="menu-btn secondary" id="btn-session-solo" style="margin-top:8px">JOGAR SOLO (sem código)</button>
+      <button class="back-btn" data-back="main-menu">← VOLTAR</button>
+    </div>
+  </div>
   <div id="tutorial-hud">
     <div class="card">
       <div class="step-num" id="tut-step-num">PASSO 1 / 15</div>
@@ -299,19 +172,11 @@
       <div class="obj" id="tut-obj">Objetivo: —</div>
     </div>
   </div>
-
   <button id="btn-deploy">📦 TIRAR DRONE DA MOCHILA</button>
   <div id="cutscene"><div class="caption" id="cutscene-text"></div></div>
-
   <div id="maps-menu" class="overlay hidden">
-    <div class="menu-panel">
-      <h1>MAPAS</h1>
-      <div class="subtitle">Escolha o cenário</div>
-      <div class="map-grid" id="map-grid"></div>
-      <button class="back-btn" data-back="main-menu">← VOLTAR</button>
-    </div>
+    <div class="menu-panel"><h1>MAPAS</h1><div class="map-grid" id="map-grid"></div><button class="back-btn" data-back="main-menu">← VOLTAR</button></div>
   </div>
-
   <div id="drone-menu" class="overlay hidden">
     <div class="menu-panel">
       <h1>LOADOUT</h1>
@@ -329,6 +194,7 @@
             <button class="shop-tab" data-shop="cam">Camera</button>
             <button class="shop-tab" data-shop="stickers">Adesivos</button>
             <button class="shop-tab" data-shop="extra">Extras</button>
+            <button class="shop-tab" data-shop="player">Player</button>
           </div>
           <div id="shop-body" class="shop-section">
             <div class="menu-section">Modelo do corpo</div>
@@ -349,13 +215,27 @@
           </div>
           <div id="shop-cam" class="shop-section hidden"><div class="shop-option-grid" id="shop-cam-grid"></div></div>
           <div id="shop-stickers" class="shop-section hidden"><div class="shop-option-grid" id="shop-sticker-grid"></div></div>
-          <div id="shop-extra" class="shop-section hidden"><div class="shop-option-grid" id="shop-extra-grid"></div></div>
+          <div id="shop-extra" class="shop-section hidden">
+            <div class="menu-section">Acessorios</div>
+            <div class="shop-option-grid" id="shop-extra-grid"></div>
+          </div>
+          <div id="shop-player" class="shop-section hidden">
+            <div class="menu-section">Personagem (modo explorar)</div>
+            <div class="setting-row"><label>Cor da pele</label><div class="color-swatches" id="player-skin-colors"></div></div>
+            <div class="setting-row"><label>Cabelo</label><div class="color-swatches" id="player-hair-colors"></div></div>
+            <div class="menu-section">Estilo de cabelo</div>
+            <div class="shop-option-grid" id="player-hair-style"></div>
+            <div class="setting-row"><label>Camisa / blusa</label><div class="color-swatches" id="player-shirt-colors"></div></div>
+            <div class="setting-row"><label>Short / calça</label><div class="color-swatches" id="player-pants-colors"></div></div>
+            <div class="setting-row"><label>Tênis</label><div class="color-swatches" id="player-shoes-colors"></div></div>
+            <div class="menu-section">Tipo de roupa</div>
+            <div class="shop-option-grid" id="player-outfit-style"></div>
+          </div>
         </div>
       </div>
       <button class="back-btn" data-back="main-menu" id="btn-shop-back">VOLTAR / APLICAR</button>
     </div>
   </div>
-
   <div id="settings-menu" class="overlay hidden">
     <div class="menu-panel">
       <h1>CONFIG</h1>
@@ -370,18 +250,13 @@
       <button class="back-btn" data-back="main-menu">VOLTAR</button>
     </div>
   </div>
-
   <div id="about-menu" class="overlay hidden">
     <div class="menu-panel">
       <h1>SOBRE</h1>
-      <p style="font-size:13px;line-height:1.5;opacity:0.85;margin:12px 0">
-        Tutorial de 15 passos · Modo explorar (pessoa) → drone com cutscene ·
-        Controles Xbox/PS/generico · Loadout 3D · Mapas e física Angle/Acro.
-      </p>
+      <p style="font-size:13px;line-height:1.5;opacity:0.85;margin:12px 0">Sessão com código de até 8 letras · Loadout Player (pele, cabelo, roupa) · Tutorial · Modo explorar.</p>
       <button class="back-btn" data-back="main-menu">VOLTAR</button>
     </div>
   </div>
-
   <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
   <script src="gamepad-fix.js"></script>
   <script src="shop-boot.js"></script>
