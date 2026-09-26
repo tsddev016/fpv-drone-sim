@@ -45,7 +45,6 @@
     .map-grid, .drone-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
     .map-card, .drone-card { background: rgba(0,40,15,0.6); border: 2px solid rgba(0,255,100,0.2); border-radius: 10px; padding: 12px 8px; text-align: center; cursor: pointer; font-size: 12px; }
     .map-card.selected, .drone-card.selected { border-color: #0f0; background: rgba(0,60,20,0.8); }
-    .map-card .icon, .drone-card .icon { font-size: 24px; margin-bottom: 4px; }
     .color-swatches { display: flex; gap: 6px; flex-wrap: wrap; }
     .swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
     .swatch.selected { border-color: #fff; transform: scale(1.12); }
@@ -55,7 +54,7 @@
     #loading .spinner { width: 40px; height: 40px; border: 3px solid rgba(0,255,100,0.2); border-top-color: #0f0; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     #drone-menu .menu-panel { max-width: 760px; }
-    .shop-layout { display: flex; flex-direction: row; gap: 12px; width: 100%; align-items: stretch; flex-wrap: wrap; justify-content: center; }
+    .shop-layout { display: flex; flex-direction: row; gap: 12px; width: 100%; flex-wrap: wrap; justify-content: center; }
     #drone-preview-wrap { width: 260px; height: 260px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0,255,100,0.25); border-radius: 12px; position: relative; overflow: hidden; flex-shrink: 0; }
     #drone-preview-wrap canvas { width: 100% !important; height: 100% !important; display: block; }
     #drone-preview-hint { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font-size: 10px; opacity: 0.55; pointer-events: none; }
@@ -85,11 +84,11 @@
       <div id="mode-label">ACRO</div>
       <div id="cam-label">FPV</div>
       <div id="fps">60 FPS</div>
-      <div id="pad-status">No Pad</div>
+      <div id="pad-status">No Pad — aperte um botao</div>
       <div id="map-name">RACING</div>
     </div>
     <div class="center" id="msg"></div>
-    <div class="bottom"><div id="hint">POTENCIA no stick esquerdo | C = camera</div></div>
+    <div class="bottom"><div id="hint">Controle: Xbox / PS / generico | C = camera</div></div>
   </div>
   <div id="touch-controls">
     <div class="stick-base" id="stick-left"><div class="stick-knob" id="knob-left"></div><div class="stick-label">POTENCIA / YAW</div></div>
@@ -102,7 +101,7 @@
   <div id="main-menu" class="overlay">
     <div class="menu-panel">
       <h1>FPV DRONE SIM</h1>
-      <div class="subtitle">Loja 3D · Fisica real · Celular & PC</div>
+      <div class="subtitle">Controles Xbox/PS · Loja 3D · TV & Celular</div>
       <button class="menu-btn" id="btn-play">JOGAR</button>
       <button class="menu-btn secondary" id="btn-maps">MAPAS</button>
       <button class="menu-btn secondary" id="btn-drone">LOJA DO DRONE</button>
@@ -148,15 +147,9 @@
             <div class="setting-row"><label>Bracos</label><div class="color-swatches" id="arm-colors"></div></div>
             <div class="setting-row"><label>Helices</label><div class="color-swatches" id="prop-colors"></div></div>
           </div>
-          <div id="shop-cam" class="shop-section hidden">
-            <div class="shop-option-grid" id="shop-cam-grid"></div>
-          </div>
-          <div id="shop-stickers" class="shop-section hidden">
-            <div class="shop-option-grid" id="shop-sticker-grid"></div>
-          </div>
-          <div id="shop-extra" class="shop-section hidden">
-            <div class="shop-option-grid" id="shop-extra-grid"></div>
-          </div>
+          <div id="shop-cam" class="shop-section hidden"><div class="shop-option-grid" id="shop-cam-grid"></div></div>
+          <div id="shop-stickers" class="shop-section hidden"><div class="shop-option-grid" id="shop-sticker-grid"></div></div>
+          <div id="shop-extra" class="shop-section hidden"><div class="shop-option-grid" id="shop-extra-grid"></div></div>
         </div>
       </div>
       <button class="back-btn" data-back="main-menu" id="btn-shop-back">VOLTAR / APLICAR</button>
@@ -179,11 +172,12 @@
   <div id="about-menu" class="overlay hidden">
     <div class="menu-panel">
       <h1>SOBRE</h1>
-      <p style="font-size:13px;line-height:1.5;opacity:0.85;margin:12px 0">Stick esquerdo = potencia. Incline o direito para ir. C = camera. Loja com preview 3D.</p>
+      <p style="font-size:13px;line-height:1.5;opacity:0.85;margin:12px 0">Controles: Xbox, PlayStation, genericos e TV. Aperte qualquer botao do controle para ativar. Loja com preview 3D girando.</p>
       <button class="back-btn" data-back="main-menu">VOLTAR</button>
     </div>
   </div>
   <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
+  <script src="gamepad-fix.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>
