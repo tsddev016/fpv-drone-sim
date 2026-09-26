@@ -1,29 +1,37 @@
-// carrega profile + AEGIS + support
-(function(){
-  function loadAegis(){var a=document.createElement('script');a.src='aegis.js';document.head.appendChild(a);}
-  if(window.FPVProfile){loadAegis();}
-  else {
-    var s=document.createElement('script');s.src='profile.js';
-    s.onload=loadAegis;
+(function () {
+  function loadScript(src, cb) {
+    var s = document.createElement('script');
+    s.src = src;
+    if (cb) s.onload = cb;
     document.head.appendChild(s);
   }
+  function afterProfile() {
+    loadScript('aegis.js');
+    loadScript('support.js');
+    loadScript('portfolio-polish.js');
+  }
+  if (window.FPVProfile) afterProfile();
+  else loadScript('profile.js', afterProfile);
 })();
-(function(){var s=document.createElement('script');s.src='support.js';document.head.appendChild(s);})();
-(function() {
+(function () {
   window.__FPV_PAD_INPUT = { throttle: 0, yaw: 0, pitch: 0, roll: 0, connected: false, name: '' };
   function dz(v, d) {
     if (Math.abs(v) < d) return 0;
     return Math.sign(v) * (Math.abs(v) - d) / (1 - d);
   }
   function expo(v, e) {
-    const s = Math.sign(v), a = Math.abs(v);
+    const s = Math.sign(v),
+      a = Math.abs(v);
     return s * (a * a * a * e + a * (1 - e));
   }
   function poll() {
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     let pad = null;
     for (let i = 0; i < pads.length; i++) {
-      if (pads[i] && pads[i].connected) { pad = pads[i]; break; }
+      if (pads[i] && pads[i].connected) {
+        pad = pads[i];
+        break;
+      }
     }
     const out = window.__FPV_PAD_INPUT;
     if (!pad) {
@@ -34,7 +42,9 @@
     }
     out.connected = true;
     out.name = (pad.id || 'PAD').split('(')[0].trim().slice(0, 20);
-    const dead = 0.08, exp = 0.3, sens = 1;
+    const dead = 0.08,
+      exp = 0.3,
+      sens = 1;
     out.throttle = Math.max(0, Math.min(1, (-(pad.axes[1] || 0) + 1) / 2));
     out.yaw = expo(dz(pad.axes[0] || 0, dead), exp) * sens;
     out.pitch = expo(dz(pad.axes[3] || 0, dead), exp) * sens;
@@ -50,16 +60,24 @@
     }
     requestAnimationFrame(poll);
   }
-  window.addEventListener('gamepadconnected', (e) => {
-    const el = document.getElementById('pad-status');
+  window.addEventListener('gamepadconnected', function (e) {
+    var el = document.getElementById('pad-status');
     if (el) el.textContent = 'OK: ' + (e.gamepad.id || 'PAD').slice(0, 20);
   });
-  window.addEventListener('gamepaddisconnected', () => {
-    const el = document.getElementById('pad-status');
+  window.addEventListener('gamepaddisconnected', function () {
+    var el = document.getElementById('pad-status');
     if (el) el.textContent = 'Pad off';
   });
-  ['pointerdown', 'keydown', 'touchstart'].forEach(ev => {
-    window.addEventListener(ev, () => { try { navigator.getGamepads(); } catch (e) {} }, { passive: true });
+  ['pointerdown', 'keydown', 'touchstart'].forEach(function (ev) {
+    window.addEventListener(
+      ev,
+      function () {
+        try {
+          navigator.getGamepads();
+        } catch (e) {}
+      },
+      { passive: true }
+    );
   });
   poll();
 })();
