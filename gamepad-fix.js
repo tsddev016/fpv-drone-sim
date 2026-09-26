@@ -1,4 +1,4 @@
-// carrega profile + AEGIS
+// carrega profile + AEGIS + support
 (function(){
   function loadAegis(){var a=document.createElement('script');a.src='aegis.js';document.head.appendChild(a);}
   if(window.FPVProfile){loadAegis();}
@@ -8,6 +8,7 @@
     document.head.appendChild(s);
   }
 })();
+(function(){var s=document.createElement('script');s.src='support.js';document.head.appendChild(s);})();
 (function() {
   window.__FPV_PAD_INPUT = { throttle: 0, yaw: 0, pitch: 0, roll: 0, connected: false, name: '' };
   function dz(v, d) {
