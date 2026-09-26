@@ -2,6 +2,14 @@
 
 Simulador FPV de drone 3D completo que roda no navegador (celular e desktop).
 
+## 📥 Download da versão completa
+
+O arquivo principal (`index.html` ~54 KB) está disponível no **Google Drive**:
+
+📁 [Pasta FPV Drone Sim 3D Pro no Google Drive](https://drive.google.com/drive/folders/1B8NKxrvuE3rf7vnftGc_yy0X8rUU5znm)
+
+Baixe todos os arquivos da pasta (index.html, manifest.json, sw.js, ícones) para a mesma pasta e abra o `index.html` no navegador.
+
 ## Características
 
 - **Visão FPV realista** com Three.js
@@ -10,7 +18,7 @@ Simulador FPV de drone 3D completo que roda no navegador (celular e desktop).
 - **4 Mapas**: Racing, Freestyle, Campo Aberto e Noturno
 - **Customização de drone**: cores, potência, peso e presets (Racer, Freestyle, Cinewhoop...)
 - **Controles**:
-  - Touch (sticks Mode 2 otimizados)
+  - Touch (sticks Mode 2 otimizados, maiores e com deadzone)
   - Teclado (WASD + setas)
   - Gamepad USB / Bluetooth (qualquer controle reconhecido como joystick)
 - **Menu completo**: Jogar, Mapas, Meu Drone, Configurações
@@ -21,10 +29,11 @@ Simulador FPV de drone 3D completo que roda no navegador (celular e desktop).
 
 ## Como jogar
 
-1. Abra `index.html` no Chrome / Firefox / Safari (ou use o link do GitHub Pages).
-2. Toque em **JOGAR**.
-3. No celular: use os dois sticks virtuais.
-4. Com controle: só parear Bluetooth ou conectar USB-OTG — o jogo detecta automaticamente.
+1. Baixe os arquivos do Google Drive ou use a pasta local.
+2. Abra `index.html` no Chrome / Firefox / Safari.
+3. Toque em **JOGAR**.
+4. No celular: use os dois sticks virtuais (Mode 2).
+5. Com controle: parear Bluetooth ou conectar USB-OTG — detecta automaticamente.
 
 ### Controles (Mode 2)
 
@@ -43,17 +52,9 @@ Simulador FPV de drone 3D completo que roda no navegador (celular e desktop).
 2. Menu → **Adicionar à tela inicial** / **Instalar app**.
 3. Abra pelo ícone — roda em tela cheia offline.
 
-## Publicação
+## Links
 
-- GitHub: este repositório
-- Pode ser servido por qualquer host estático (GitHub Pages, Netlify, etc.)
-
-## Tecnologias
-
-- Three.js r160
-- Web Audio API
-- Gamepad API
-- Service Worker + Manifest (PWA)
-- localStorage para salvar configurações
+- **Google Drive (arquivos completos)**: https://drive.google.com/drive/folders/1B8NKxrvuE3rf7vnftGc_yy0X8rUU5znm
+- **GitHub**: https://github.com/tsddev016/fpv-drone-sim
 
 Feito para treino de FPV no celular e desktop. Divirta-se! 🚁
