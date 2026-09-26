@@ -135,8 +135,8 @@
     name = normalizeName(name);
     if (!name || name.length < 2) return { ok: false, msg: 'Nome mínimo 2 caracteres' };
     if (!password || String(password).length < 4) return { ok: false, msg: 'Senha mínimo 4 caracteres' };
-    if (!question || String(question).trim().length < 3) return { ok: false, msg: 'Pergunta de segurança obrigatória' };
-    if (!answer || String(answer).trim().length < 2) return { ok: false, msg: 'Resposta de segurança obrigatória' };
+    if (!question || String(question).trim().length < 3) return { ok: false, msg: 'Pergunta secreta obrigatória' };
+    if (!answer || String(answer).trim().length < 2) return { ok: false, msg: 'Resposta obrigatória' };
     const key = name.toLowerCase();
     if (store.accounts[key]) return { ok: false, msg: 'Nome já existe neste aparelho' };
     const salt = bufToB64(randomBytes(16).buffer);
@@ -226,7 +226,7 @@
   function guestProfile() {
     return {
       id: 'guest', name: '', level: 1, xpSeconds: 0, isAdmin: false, rank: 'CONVIDADO',
-      firstAccess: '', lastAccess: '', ip: '••••', deviceInfo: detectDevice(),
+      firstAccess: '', lastAccess: '', ip: '—', deviceInfo: detectDevice(),
       unlocked: { body: ['standard'], cams: ['none', 'fpv'], stickers: ['none'], extras: ['none'] },
       custom: emptyGameData().custom, player: emptyGameData().player,
       stats: { flights: 0, totalSeconds: 0, resets: 0 }, authenticated: false,
@@ -238,7 +238,7 @@
     return {
       id: session.publicId, name: session.name, level: g.level, xpSeconds: g.xpSeconds,
       isAdmin: !!g.isAdmin, rank: g.rank || 'PILOTO', firstAccess: '', lastAccess: new Date().toISOString(),
-      ip: '•••• (criptografado)', deviceInfo: detectDevice(), unlocked: g.unlocked,
+      ip: '—', deviceInfo: detectDevice(), unlocked: g.unlocked,
       custom: g.custom, player: g.player, stats: g.stats, authenticated: true,
     };
   }
@@ -279,7 +279,7 @@
     const key = session.name.toLowerCase();
     if (store.accounts[key]) store.accounts[key].publicId = '01';
     persistGame();
-    return { ok: true, msg: 'Admin TSDEV ativo (local)' };
+    return { ok: true, msg: 'OK' };
   }
   function isUnlocked(category, id) {
     const p = ensure();
@@ -301,7 +301,33 @@
   function el(html) { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild; }
   function showAuthGate() {
     if (document.getElementById('fpv-auth-gate')) return;
-    const gate = el('<div id="fpv-auth-gate" style="position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:16px;color:#0f0;font-family:monospace"><div style="max-width:360px;width:100%;background:linear-gradient(160deg,rgba(8,28,16,0.98),rgba(2,10,6,0.99));border:1px solid rgba(0,255,120,0.25);border-radius:16px;padding:22px 18px"><h2 style="text-align:center;letter-spacing:2px;margin:0 0 6px;font-size:18px">CONTA FPV</h2><p style="text-align:center;font-size:11px;opacity:0.5;margin:0 0 14px;line-height:1.4">Senha = PBKDF2-SHA256 · IP/ID = AES-GCM · só neste aparelho</p><div id="auth-step-name"><label style="font-size:11px;opacity:0.7">Nome do piloto</label><input id="auth-name" maxlength="16" placeholder="Seu nome" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:16px;font-family:monospace;box-sizing:border-box" /><button type="button" id="auth-next" style="width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(180deg,#0f0,#0a0);color:#000;font-weight:700;cursor:pointer">CONTINUAR</button></div><div id="auth-step-login" style="display:none"><label style="font-size:11px;opacity:0.7">Senha</label><input id="auth-pass" type="password" maxlength="64" placeholder="Senha" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:16px;font-family:monospace;box-sizing:border-box" /><button type="button" id="auth-login" style="width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(180deg,#0f0,#0a0);color:#000;font-weight:700;cursor:pointer;margin-bottom:8px">ENTRAR</button><button type="button" id="auth-forgot" style="width:100%;padding:10px;border:1px solid rgba(0,255,100,0.3);border-radius:10px;background:transparent;color:#0f0;cursor:pointer;font-size:12px">Esqueci a senha</button></div><div id="auth-step-register" style="display:none"><label style="font-size:11px;opacity:0.7">Crie uma senha</label><input id="auth-reg-pass" type="password" maxlength="64" placeholder="Mín. 4 caracteres" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:16px;font-family:monospace;box-sizing:border-box" /><label style="font-size:11px;opacity:0.7">Pergunta de segurança (2º fator)</label><input id="auth-reg-q" maxlength="80" placeholder="Ex: nome do seu pet?" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:14px;font-family:monospace;box-sizing:border-box" /><label style="font-size:11px;opacity:0.7">Resposta</label><input id="auth-reg-a" maxlength="40" placeholder="Ex: Pablo" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:14px;font-family:monospace;box-sizing:border-box" /><button type="button" id="auth-register" style="width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(180deg,#0f0,#0a0);color:#000;font-weight:700;cursor:pointer">CRIAR CONTA</button></div><div id="auth-step-recover" style="display:none"><p id="auth-recover-q" style="font-size:13px;margin:0 0 10px;line-height:1.4;color:#9f8"></p><input id="auth-recover-a" maxlength="40" placeholder="Resposta" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:14px;font-family:monospace;box-sizing:border-box" /><input id="auth-recover-pass" type="password" maxlength="64" placeholder="Nova senha" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:14px;font-family:monospace;box-sizing:border-box" /><button type="button" id="auth-recover-go" style="width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(180deg,#0f0,#0a0);color:#000;font-weight:700;cursor:pointer">REDEFINIR SENHA</button></div><div id="auth-msg" style="min-height:18px;margin-top:10px;font-size:12px;color:#f86;text-align:center"></div><button type="button" id="auth-back" style="display:none;width:100%;margin-top:8px;padding:10px;border:1px solid rgba(0,255,100,0.25);border-radius:10px;background:transparent;color:#0f0;cursor:pointer;font-size:12px">← Voltar</button></div></div>');
+    const gate = el(
+      '<div id="fpv-auth-gate" style="position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:16px;color:#0f0;font-family:monospace">' +
+      '<div style="max-width:360px;width:100%;background:linear-gradient(160deg,rgba(8,28,16,0.98),rgba(2,10,6,0.99));border:1px solid rgba(0,255,120,0.25);border-radius:16px;padding:22px 18px">' +
+      '<h2 style="text-align:center;letter-spacing:2px;margin:0 0 6px;font-size:18px">CONTA FPV</h2>' +
+      '<p style="text-align:center;font-size:11px;opacity:0.5;margin:0 0 14px;line-height:1.4">Entre com seu nome de piloto</p>' +
+      '<div id="auth-step-name"><label style="font-size:11px;opacity:0.7">Nome do piloto</label>' +
+      '<input id="auth-name" maxlength="16" placeholder="Seu nome" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:16px;font-family:monospace;box-sizing:border-box" />' +
+      '<button type="button" id="auth-next" style="width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(180deg,#0f0,#0a0);color:#000;font-weight:700;cursor:pointer">CONTINUAR</button></div>' +
+      '<div id="auth-step-login" style="display:none"><label style="font-size:11px;opacity:0.7">Senha</label>' +
+      '<input id="auth-pass" type="password" maxlength="64" placeholder="Senha" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:16px;font-family:monospace;box-sizing:border-box" />' +
+      '<button type="button" id="auth-login" style="width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(180deg,#0f0,#0a0);color:#000;font-weight:700;cursor:pointer;margin-bottom:8px">ENTRAR</button>' +
+      '<button type="button" id="auth-forgot" style="width:100%;padding:10px;border:1px solid rgba(0,255,100,0.3);border-radius:10px;background:transparent;color:#0f0;cursor:pointer;font-size:12px">Esqueci a senha</button></div>' +
+      '<div id="auth-step-register" style="display:none"><label style="font-size:11px;opacity:0.7">Crie uma senha</label>' +
+      '<input id="auth-reg-pass" type="password" maxlength="64" placeholder="Mín. 4 caracteres" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:16px;font-family:monospace;box-sizing:border-box" />' +
+      '<label style="font-size:11px;opacity:0.7">Pergunta secreta</label>' +
+      '<input id="auth-reg-q" maxlength="80" placeholder="Ex: nome do seu pet?" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:14px;font-family:monospace;box-sizing:border-box" />' +
+      '<label style="font-size:11px;opacity:0.7">Resposta</label>' +
+      '<input id="auth-reg-a" maxlength="40" placeholder="Ex: Pablo" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:14px;font-family:monospace;box-sizing:border-box" />' +
+      '<button type="button" id="auth-register" style="width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(180deg,#0f0,#0a0);color:#000;font-weight:700;cursor:pointer">CRIAR CONTA</button></div>' +
+      '<div id="auth-step-recover" style="display:none"><p id="auth-recover-q" style="font-size:13px;margin:0 0 10px;line-height:1.4;color:#9f8"></p>' +
+      '<input id="auth-recover-a" maxlength="40" placeholder="Resposta" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:14px;font-family:monospace;box-sizing:border-box" />' +
+      '<input id="auth-recover-pass" type="password" maxlength="64" placeholder="Nova senha" style="width:100%;margin:6px 0 10px;padding:12px;background:#111;border:1px solid rgba(0,255,100,0.35);border-radius:10px;color:#0f8;font-size:14px;font-family:monospace;box-sizing:border-box" />' +
+      '<button type="button" id="auth-recover-go" style="width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(180deg,#0f0,#0a0);color:#000;font-weight:700;cursor:pointer">REDEFINIR SENHA</button></div>' +
+      '<div id="auth-msg" style="min-height:18px;margin-top:10px;font-size:12px;color:#f86;text-align:center"></div>' +
+      '<button type="button" id="auth-back" style="display:none;width:100%;margin-top:8px;padding:10px;border:1px solid rgba(0,255,100,0.25);border-radius:10px;background:transparent;color:#0f0;cursor:pointer;font-size:12px">← Voltar</button>' +
+      '</div></div>'
+    );
     document.body.appendChild(gate);
     const msg = () => document.getElementById('auth-msg');
     const show = (id) => {
@@ -324,7 +350,7 @@
       msg().textContent = r.msg; if (r.ok) closeAuthGate();
     };
     document.getElementById('auth-register').onclick = async () => {
-      msg().textContent = 'Criptografando...';
+      msg().textContent = 'Criando conta...';
       const r = await register(pendingName, document.getElementById('auth-reg-pass').value, document.getElementById('auth-reg-q').value, document.getElementById('auth-reg-a').value);
       msg().textContent = r.msg; if (r.ok) closeAuthGate();
     };
@@ -351,10 +377,7 @@
     const m = document.getElementById('prof-meta');
     if (n) n.textContent = p.authenticated ? p.name : 'Não logado';
     if (l) l.textContent = p.isAdmin ? '∞' : String(p.level || 1);
-    if (m) {
-      const d = p.deviceInfo || {};
-      m.textContent = (p.authenticated ? 'ID ' + p.id + ' · ' : 'Convidado · ') + (d.browser || '') + ' · ' + (d.device || '');
-    }
+    if (m) m.textContent = p.authenticated ? ('Level ' + (p.level || 1)) : 'Faça login para salvar';
     let hl = document.getElementById('hud-level');
     if (!hl) {
       const tr = document.querySelector('#hud .top-right');
@@ -373,23 +396,6 @@
       if (playBtn) main.insertBefore(card, playBtn); else main.appendChild(card);
       document.getElementById('btn-auth-open')?.addEventListener('click', () => showAuthGate());
       document.getElementById('btn-auth-logout')?.addEventListener('click', () => { logout(); refreshProfileUI(); showAuthGate(); });
-    }
-    const settings = document.querySelector('#settings-menu .menu-panel');
-    if (settings && !document.getElementById('admin-code')) {
-      const box = document.createElement('div');
-      box.innerHTML = '<div class="menu-section">Conta local</div><p style="font-size:11px;opacity:0.5;margin:6px 0 8px">Senha = PBKDF2 · IP/ID = AES-GCM. Admin: TSDEV-01</p><div class="setting-row"><label>Código admin</label><input type="password" id="admin-code" maxlength="24" placeholder="••••" style="background:#111;color:#0f0;border:1px solid rgba(0,255,100,0.3);border-radius:6px;padding:5px 8px;font-family:monospace;font-size:12px;max-width:130px" /></div><button type="button" class="menu-btn secondary" id="btn-admin-activate" style="margin-top:4px">Ativar ADMIN</button><div id="admin-msg" style="font-size:11px;min-height:16px;margin-top:4px;opacity:0.7"></div><button type="button" class="menu-btn secondary" id="btn-reveal-sensitive" style="margin-top:6px">Revelar IP/ID</button><div id="sensitive-msg" style="font-size:10px;margin-top:4px;opacity:0.6;word-break:break-all"></div>';
-      const back = settings.querySelector('.back-btn');
-      if (back) settings.insertBefore(box, back); else settings.appendChild(box);
-      document.getElementById('btn-admin-activate')?.addEventListener('click', async () => {
-        const r = await tryActivateAdmin(document.getElementById('admin-code')?.value || '');
-        const m = document.getElementById('admin-msg'); if (m) m.textContent = r.msg;
-        refreshProfileUI();
-      });
-      document.getElementById('btn-reveal-sensitive')?.addEventListener('click', async () => {
-        const s = await revealSensitive();
-        const m = document.getElementById('sensitive-msg');
-        if (m) m.textContent = session ? 'IP: ' + (s.ip || '—') + ' · ID: ' + (s.id || '—') : 'Faça login';
-      });
     }
     refreshProfileUI();
     let acc = 0, last = performance.now();
