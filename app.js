@@ -45,6 +45,7 @@ let drone, droneBody, props = [], arms = [], leds = [];
 let velocity = new THREE.Vector3();
 let angularVelocity = new THREE.Vector3();
 let throttle = 0;
+let holdAlt = null;
 let input = { throttle: 0, yaw: 0, pitch: 0, roll: 0, moveX: 0, moveY: 0 };
 const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 let mode = isTouchDevice ? 'angle' : 'acro';
@@ -358,17 +359,23 @@ function updateStick(side, cx, cy) {
 function applyExpo(v, expo) { const s = Math.sign(v), a = Math.abs(v); return s * (a * a * a * expo + a * (1 - expo)); }
 function applyDeadzone(v, dz) { if (Math.abs(v) < dz) return 0; return Math.sign(v) * (Math.abs(v) - dz) / (1 - dz); }
 function readInput() {
-  input.throttle = 0; input.yaw = 0; input.pitch = 0; input.roll = 0; input.moveX = 0; input.moveY = 0;
-  const dz = Math.max(CONFIG.deadzone, 0.08), expo = CONFIG.expo, sens = CONFIG.sensitivity;
+  input.throttle = 0; input.yaw = 0; input.pitch = 0; input.roll = 0;
+  input.moveX = 0; input.moveY = 0;
+  const dz = Math.max(CONFIG.deadzone, 0.08);
+  const expo = CONFIG.expo, sens = CONFIG.sensitivity;
   const touchActive = sticks.left.active || sticks.right.active;
+  const hoverT = Math.min(0.9, (CONFIG.mass * CONFIG.gravity) / Math.max(0.1, CONFIG.maxThrust));
   if (touchActive && controlScheme === 'arcade') {
     const lx = applyExpo(applyDeadzone(sticks.left.x, dz), expo);
     const ly = applyExpo(applyDeadzone(sticks.left.y, dz), expo);
     const rx = applyExpo(applyDeadzone(sticks.right.x, dz), expo);
     const ry = applyExpo(applyDeadzone(sticks.right.y, dz), expo);
-    input.moveX = lx * sens; input.moveY = -ly * sens;
-    input.pitch = ry * sens; input.roll = rx * sens; input.yaw = lx * 0.35 * sens;
-    input.throttle = Math.min(1, 0.48 + Math.max(0, -ly) * 0.12);
+    input.moveX = lx * sens;
+    input.moveY = -ly * sens;
+    input.pitch = -ry * sens;
+    input.roll = rx * sens;
+    input.yaw = lx * 0.12 * sens;
+    input.throttle = hoverT;
   } else if (touchActive) {
     input.throttle = Math.max(0, Math.min(1, (1 - sticks.left.y) / 2));
     input.yaw = applyExpo(applyDeadzone(sticks.left.x, dz), expo) * sens * 0.7;
@@ -376,31 +383,55 @@ function readInput() {
     input.roll = applyExpo(applyDeadzone(sticks.right.x, dz), expo) * sens;
   }
   const k = window._keys || {};
-  if (k['KeyW']) { input.throttle = Math.min(1, Math.max(input.throttle, 0.85)); input.moveY = 1; }
-  if (k['KeyS']) { input.throttle = Math.max(input.throttle, 0.35); input.moveY = -1; }
-  if (k['KeyA']) input.yaw = -1; if (k['KeyD']) input.yaw = 1;
-  if (k['ArrowUp']) input.pitch = -1; if (k['ArrowDown']) input.pitch = 1;
-  if (k['ArrowLeft']) input.roll = -1; if (k['ArrowRight']) input.roll = 1;
+  if (controlScheme === 'arcade') {
+    if (k['KeyW']) input.moveY = 1;
+    if (k['KeyS']) input.moveY = -1;
+    if (k['KeyA']) input.moveX = -1;
+    if (k['KeyD']) input.moveX = 1;
+    if (k['ArrowUp']) { input.moveY = 1; input.pitch = -0.5; }
+    if (k['ArrowDown']) { input.moveY = -1; input.pitch = 0.5; }
+    if (k['ArrowLeft']) input.moveX = -1;
+    if (k['ArrowRight']) input.moveX = 1;
+    if (k['KeyQ']) input.yaw = -1;
+    if (k['KeyE']) input.yaw = 1;
+    if (k['Space'] && holdAlt !== null) holdAlt += 0.08;
+    if ((k['ShiftLeft'] || k['ShiftRight']) && holdAlt !== null) holdAlt = Math.max(0.5, holdAlt - 0.08);
+  } else {
+    if (k['KeyW'] || k['Space']) input.throttle = Math.min(1, Math.max(input.throttle, 0.9));
+    if (k['KeyS']) input.throttle = Math.min(input.throttle || 0.5, 0.12);
+    if (k['KeyA']) input.yaw = -1;
+    if (k['KeyD']) input.yaw = 1;
+    if (k['ArrowUp']) input.pitch = -1;
+    if (k['ArrowDown']) input.pitch = 1;
+    if (k['ArrowLeft']) input.roll = -1;
+    if (k['ArrowRight']) input.roll = 1;
+  }
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];
   let padFound = false;
   for (const pad of pads) {
     if (!pad || !pad.connected) continue;
     padFound = true;
-    input.throttle = Math.max(0, Math.min(1, (-(pad.axes[1] || 0) + 1) / 2));
-    input.yaw = applyExpo(applyDeadzone(pad.axes[0] || 0, dz), expo) * sens;
+    if (controlScheme !== 'arcade') {
+      input.throttle = Math.max(0, Math.min(1, (-(pad.axes[1] || 0) + 1) / 2));
+    } else {
+      input.moveX = applyExpo(applyDeadzone(pad.axes[0] || 0, dz), expo) * sens;
+      input.moveY = applyExpo(applyDeadzone(-(pad.axes[1] || 0), dz), expo) * sens;
+    }
+    input.yaw = applyExpo(applyDeadzone(pad.axes[0] || 0, dz), expo) * sens * (controlScheme === 'arcade' ? 0.15 : 1);
     input.pitch = applyExpo(applyDeadzone(pad.axes[3] || 0, dz), expo) * sens;
     input.roll = applyExpo(applyDeadzone(pad.axes[2] || 0, dz), expo) * sens;
     break;
   }
   if (window.__FPV_PAD_INPUT && window.__FPV_PAD_INPUT.connected) {
     const p = window.__FPV_PAD_INPUT;
-    input.throttle = p.throttle; input.yaw = p.yaw; input.pitch = p.pitch; input.roll = p.roll;
+    if (controlScheme !== 'arcade') input.throttle = p.throttle;
+    input.yaw = p.yaw; input.pitch = p.pitch; input.roll = p.roll;
   }
   const ps = document.getElementById('pad-status');
   if (ps) {
     if (window.__FPV_PAD_INPUT && window.__FPV_PAD_INPUT.connected) ps.textContent = 'PAD · ' + (window.__FPV_PAD_INPUT.name || 'OK');
     else if (padFound) ps.textContent = 'PAD OK';
-    else if (touchActive) ps.textContent = 'TOQUE ARCADE';
+    else if (touchActive) ps.textContent = controlScheme === 'arcade' ? 'TOQUE ARCADE' : 'TOQUE M2';
     else ps.textContent = sessionCode ? ('SALA ' + sessionCode) : 'No Pad';
   }
   throttle = input.throttle;
@@ -409,21 +440,22 @@ function updatePhysics(dt) {
   if (!gameStarted || playMode === 'walk') return;
   const maxRateRad = THREE.MathUtils.degToRad(CONFIG.maxRate);
   let targetWx = input.pitch * maxRateRad;
-  let targetWy = input.yaw * maxRateRad * 0.45;
+  let targetWy = input.yaw * maxRateRad * 0.5;
   let targetWz = input.roll * maxRateRad;
   if (mode === 'angle' || controlScheme === 'arcade') {
-    const maxTilt = THREE.MathUtils.degToRad(45);
+    const maxTilt = THREE.MathUtils.degToRad(controlScheme === 'arcade' ? 35 : 50);
     const euler = new THREE.Euler().setFromQuaternion(drone.quaternion, 'YXZ');
-    const kp = 12;
+    const kp = 10;
     targetWx = (input.pitch * maxTilt - euler.x) * kp;
     targetWz = (input.roll * maxTilt - euler.z) * kp;
-    targetWy = input.yaw * maxRateRad * 0.5;
+    targetWy = input.yaw * maxRateRad * 0.55;
   }
-  const angAccel = 40;
+  const angAccel = 28;
   angularVelocity.x += (targetWx - angularVelocity.x) * Math.min(1, angAccel * dt);
   angularVelocity.y += (targetWy - angularVelocity.y) * Math.min(1, angAccel * dt);
   angularVelocity.z += (targetWz - angularVelocity.z) * Math.min(1, angAccel * dt);
-  if (Math.sqrt((input.pitch||0)**2+(input.roll||0)**2+(input.yaw||0)**2+(input.moveX||0)**2+(input.moveY||0)**2) < 0.08) angularVelocity.multiplyScalar(0.82);
+  const stickMag = Math.sqrt((input.pitch||0)**2 + (input.roll||0)**2 + (input.yaw||0)**2 + (input.moveX||0)**2 + (input.moveY||0)**2);
+  if (stickMag < 0.06) angularVelocity.multiplyScalar(0.88);
   const wx = angularVelocity.x * dt, wy = angularVelocity.y * dt, wz = angularVelocity.z * dt;
   drone.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), wy));
   drone.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), wx));
@@ -431,34 +463,55 @@ function updatePhysics(dt) {
   drone.quaternion.normalize();
   const up = new THREE.Vector3(0, 1, 0).applyQuaternion(drone.quaternion);
   let thrustMul = throttle * CONFIG.maxThrust;
-  if (mode === 'angle' || controlScheme === 'arcade') {
-    const tilt = Math.sqrt(up.x * up.x + up.z * up.z);
-    thrustMul *= (1 + tilt * 0.55);
+  if (controlScheme === 'arcade') {
+    const anyMove = stickMag > 0.05;
+    if (anyMove) {
+      if (holdAlt === null) holdAlt = drone.position.y;
+    } else {
+      holdAlt = null;
+    }
+    if (holdAlt !== null) {
+      const err = holdAlt - drone.position.y;
+      const climbCmd = THREE.MathUtils.clamp(err * 1.8 - velocity.y * 1.2, -0.35, 0.35);
+      const uy = Math.max(0.55, up.y);
+      thrustMul = ((CONFIG.mass * CONFIG.gravity) + climbCmd * CONFIG.mass * 9) / uy;
+      thrustMul = THREE.MathUtils.clamp(thrustMul, 0, CONFIG.maxThrust * 1.05);
+      throttle = THREE.MathUtils.clamp(thrustMul / CONFIG.maxThrust, 0, 1);
+    }
+  } else if (mode === 'angle') {
+    const uy = Math.max(0.5, up.y);
+    thrustMul = throttle * CONFIG.maxThrust / uy;
   }
-  const force = up.multiplyScalar(thrustMul);
+  const force = up.clone().multiplyScalar(thrustMul);
   force.y -= CONFIG.mass * CONFIG.gravity;
   if (controlScheme === 'arcade' && (Math.abs(input.moveX) > 0.02 || Math.abs(input.moveY) > 0.02)) {
     const yawOnly = new THREE.Euler().setFromQuaternion(drone.quaternion, 'YXZ');
     const facing = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yawOnly.y, 0));
     const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(facing);
     const right = new THREE.Vector3(1, 0, 0).applyQuaternion(facing);
-    force.add(forward.multiplyScalar(input.moveY * 18 * CONFIG.mass));
-    force.add(right.multiplyScalar(input.moveX * 18 * CONFIG.mass));
+    const accel = 12;
+    force.add(forward.multiplyScalar(input.moveY * accel * CONFIG.mass));
+    force.add(right.multiplyScalar(input.moveX * accel * CONFIG.mass));
   }
-  const speed = velocity.length();
-  const drag = CONFIG.drag * (1 + speed * 0.05);
-  force.x -= velocity.x * drag; force.y -= velocity.y * drag * 0.9; force.z -= velocity.z * drag;
+  const drag = 0.12 * (1 + velocity.length() * 0.04);
+  force.x -= velocity.x * drag * CONFIG.mass;
+  force.y -= velocity.y * drag * CONFIG.mass * 0.85;
+  force.z -= velocity.z * drag * CONFIG.mass;
   velocity.add(force.divideScalar(CONFIG.mass).multiplyScalar(dt));
   const hVel = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
-  if (hVel > 28) { velocity.x *= 28 / hVel; velocity.z *= 28 / hVel; }
+  const maxH = 16;
+  if (hVel > maxH) { velocity.x *= maxH / hVel; velocity.z *= maxH / hVel; }
+  velocity.y = THREE.MathUtils.clamp(velocity.y, -20, 12);
   const nextPos = drone.position.clone().add(velocity.clone().multiplyScalar(dt));
   if (nextPos.y < 0.08) {
     nextPos.y = 0.08;
-    if (velocity.y < 0) velocity.y *= -0.1;
-    velocity.x *= 0.75; velocity.z *= 0.75; angularVelocity.multiplyScalar(0.55);
+    if (velocity.y < 0) velocity.y = 0;
+    velocity.x *= 0.6; velocity.z *= 0.6;
+    angularVelocity.multiplyScalar(0.4);
+    holdAlt = null;
   }
   drone.position.copy(nextPos);
-  props.forEach(p => { p.rotation.y += p.userData.spinDir * (6 + throttle * 60) * dt; });
+  props.forEach(p => { p.rotation.y += p.userData.spinDir * (4 + throttle * 50) * dt; });
   if (Math.abs(drone.position.x) > 190 || Math.abs(drone.position.z) > 190) {
     showMsg('FORA DA AREA'); setTimeout(resetDrone, 700);
   }
@@ -471,7 +524,7 @@ function resetDrone() {
   drone.position.set(0, CONFIG.respawnHeight, 0);
   drone.quaternion.identity();
   velocity.set(0, 0, 0); angularVelocity.set(0, 0, 0);
-  throttle = 0; battery = Math.min(100, battery + 20);
+  throttle = 0; holdAlt = null; battery = Math.min(100, battery + 20);
   if (playMode !== 'walk') applyCameraMode();
   showMsg('RESET');
 }
@@ -502,17 +555,17 @@ function openSessionMenu(modeName) {
   pendingStartMode = modeName || 'drone';
   hideAllOverlays();
   document.getElementById('session-menu')?.classList.remove('hidden');
-  const input = document.getElementById('session-code');
+  const inputEl = document.getElementById('session-code');
   const err = document.getElementById('session-error');
   if (err) err.textContent = '';
-  if (input) { input.value = sessionCode || ''; setTimeout(() => input.focus(), 80); }
+  if (inputEl) { inputEl.value = sessionCode || ''; setTimeout(() => inputEl.focus(), 80); }
 }
 function confirmSession(useCode) {
-  const input = document.getElementById('session-code');
+  const inputEl = document.getElementById('session-code');
   const err = document.getElementById('session-error');
   if (useCode) {
-    const code = normalizeSessionCode(input ? input.value : '');
-    if (input) input.value = code;
+    const code = normalizeSessionCode(inputEl ? inputEl.value : '');
+    if (inputEl) inputEl.value = code;
     if (!code || code.length < 2) {
       if (err) err.textContent = 'Min. 2 letras (max 8). Sem numeros.';
       return;
@@ -581,7 +634,7 @@ function deployDroneCutscene() {
       drone.position.set(walkPos.x, 0.15, walkPos.z - 1.2);
       drone.quaternion.identity(); velocity.set(0,0,0); angularVelocity.set(0,0,0);
     }
-    if (i === 2 && drone) { drone.position.y = 1.2; throttle = 0.5; }
+    if (i === 2 && drone) { drone.position.y = 1.2; holdAlt = 1.2; throttle = 0.3; }
     if (i >= lines.length) {
       setTimeout(() => {
         if (cs) cs.classList.remove('show');
@@ -655,6 +708,7 @@ function updateTutorial(dt) {
 }
 function openMenu() {
   gameStarted = false; tutorialActive = false; playMode = 'drone'; cutsceneActive = false;
+  holdAlt = null;
   document.getElementById('tutorial-hud')?.classList.remove('show');
   document.getElementById('btn-deploy')?.classList.remove('show');
   document.getElementById('cutscene')?.classList.remove('show');
