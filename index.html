@@ -23,10 +23,16 @@
     .stick-base { position: absolute; width: 140px; height: 140px; border-radius: 50%; background: rgba(0,0,0,0.35); border: 2px solid rgba(0,255,100,0.35); pointer-events: auto; bottom: 30px; }
     #stick-left { left: 20px; } #stick-right { right: 20px; }
     .stick-knob { position: absolute; width: 58px; height: 58px; border-radius: 50%; background: rgba(0,255,120,0.8); border: 2px solid #0f0; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-    .stick-label { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 10px; color: rgba(0,255,100,0.6); font-family: monospace; }
-    #btn-reset, #btn-mode, #btn-menu { position: fixed; pointer-events: auto; background: rgba(0,0,0,0.65); color: #0f0; border: 1px solid rgba(0,255,100,0.5); border-radius: 8px; padding: 10px 14px; font-size: 12px; font-family: monospace; z-index: 15; }
+    .stick-label { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 10px; color: rgba(0,255,100,0.6); font-family: monospace; white-space: nowrap; }
+    #btn-reset, #btn-mode, #btn-menu, #btn-cam {
+      position: fixed; pointer-events: auto; background: rgba(0,0,0,0.65); color: #0f0;
+      border: 1px solid rgba(0,255,100,0.5); border-radius: 8px; padding: 10px 14px;
+      font-size: 12px; font-family: monospace; z-index: 15;
+    }
     #btn-reset { top: 12px; left: 50%; transform: translateX(-50%); }
-    #btn-mode { bottom: 200px; right: 16px; } #btn-menu { bottom: 200px; left: 16px; }
+    #btn-mode { bottom: 200px; right: 16px; }
+    #btn-menu { bottom: 200px; left: 16px; }
+    #btn-cam { bottom: 250px; right: 16px; }
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #0f0; overflow-y: auto; padding: 20px; }
     .overlay.hidden { display: none !important; }
     .menu-panel { background: rgba(0,25,10,0.7); border: 1px solid rgba(0,255,100,0.25); border-radius: 16px; padding: 28px 24px; max-width: 380px; width: 100%; }
@@ -67,24 +73,26 @@
     </div>
     <div class="top-right">
       <div id="mode-label">ACRO</div>
+      <div id="cam-label">FPV</div>
       <div id="fps">60 FPS</div>
       <div id="pad-status">No Pad</div>
       <div id="map-name">RACING</div>
     </div>
     <div class="center" id="msg"></div>
-    <div class="bottom"><div id="hint">FPV DRONE SIM PRO</div></div>
+    <div class="bottom"><div id="hint">POTENCIA no stick esquerdo | C = camera 3D</div></div>
   </div>
   <div id="touch-controls">
-    <div class="stick-base" id="stick-left"><div class="stick-knob" id="knob-left"></div><div class="stick-label">THR / YAW</div></div>
+    <div class="stick-base" id="stick-left"><div class="stick-knob" id="knob-left"></div><div class="stick-label">POTENCIA / YAW</div></div>
     <div class="stick-base" id="stick-right"><div class="stick-knob" id="knob-right"></div><div class="stick-label">PITCH / ROLL</div></div>
   </div>
   <button id="btn-reset" class="hidden">RESET</button>
   <button id="btn-mode" class="hidden">MODO: ACRO</button>
   <button id="btn-menu" class="hidden">MENU</button>
+  <button id="btn-cam" class="hidden">CAM: FPV</button>
   <div id="main-menu" class="overlay">
     <div class="menu-panel">
       <h1>FPV DRONE SIM</h1>
-      <div class="subtitle">Simulador 3D Pro • Celular & Desktop</div>
+      <div class="subtitle">Fisica real · Camera FPV/3D · Celular & Desktop</div>
       <button class="menu-btn" id="btn-play">JOGAR</button>
       <button class="menu-btn secondary" id="btn-maps">MAPAS</button>
       <button class="menu-btn secondary" id="btn-drone">MEU DRONE</button>
@@ -102,8 +110,8 @@
       <div class="setting-row"><label>Corpo</label><div class="color-swatches" id="body-colors"></div></div>
       <div class="setting-row"><label>Bracos</label><div class="color-swatches" id="arm-colors"></div></div>
       <div class="setting-row"><label>Helices</label><div class="color-swatches" id="prop-colors"></div></div>
-      <div class="setting-row"><label>Potencia</label><input type="range" id="cfg-thrust" min="12" max="28" value="18" /><span class="value" id="val-thrust">18N</span></div>
-      <div class="setting-row"><label>Peso</label><input type="range" id="cfg-mass" min="0.3" max="0.9" step="0.05" value="0.5" /><span class="value" id="val-mass">0.50kg</span></div>
+      <div class="setting-row"><label>Potencia</label><input type="range" id="cfg-thrust" min="12" max="30" value="22" /><span class="value" id="val-thrust">22N</span></div>
+      <div class="setting-row"><label>Peso</label><input type="range" id="cfg-mass" min="0.3" max="0.9" step="0.05" value="0.55" /><span class="value" id="val-mass">0.55kg</span></div>
       <button class="back-btn" data-back="main-menu">VOLTAR</button>
     </div>
   </div>
@@ -111,20 +119,26 @@
     <div class="menu-panel">
       <h1>CONFIG</h1>
       <div class="setting-row"><label>Qualidade</label><select id="cfg-quality"><option value="low">Baixa</option><option value="medium" selected>Media</option><option value="high">Alta</option></select></div>
-      <div class="setting-row"><label>FOV</label><input type="range" id="cfg-fov" min="70" max="130" step="5" value="100" /><span class="value" id="val-fov">100</span></div>
+      <div class="setting-row"><label>FOV</label><input type="range" id="cfg-fov" min="70" max="130" step="5" value="105" /><span class="value" id="val-fov">105</span></div>
       <div class="setting-row"><label>Sens</label><input type="range" id="cfg-sens" min="0.4" max="1.6" step="0.1" value="1.0" /><span class="value" id="val-sens">1.0x</span></div>
-      <div class="setting-row"><label>Expo</label><input type="range" id="cfg-expo" min="0" max="0.8" step="0.05" value="0.35" /><span class="value" id="val-expo">0.35</span></div>
-      <div class="setting-row"><label>Rate</label><input type="range" id="cfg-rate" min="400" max="1200" step="50" value="750" /><span class="value" id="val-rate">750</span></div>
-      <div class="setting-row"><label>Deadzone</label><input type="range" id="cfg-dead" min="0" max="0.15" step="0.01" value="0.06" /><span class="value" id="val-dead">0.06</span></div>
+      <div class="setting-row"><label>Expo</label><input type="range" id="cfg-expo" min="0" max="0.8" step="0.05" value="0.3" /><span class="value" id="val-expo">0.3</span></div>
+      <div class="setting-row"><label>Rate</label><input type="range" id="cfg-rate" min="400" max="1200" step="50" value="800" /><span class="value" id="val-rate">800</span></div>
+      <div class="setting-row"><label>Deadzone</label><input type="range" id="cfg-dead" min="0" max="0.15" step="0.01" value="0.05" /><span class="value" id="val-dead">0.05</span></div>
       <div class="setting-row"><label>Som</label><select id="cfg-sound"><option value="on" selected>On</option><option value="off">Off</option></select></div>
-      <div class="setting-row"><label>Volume</label><input type="range" id="cfg-vol" min="0" max="1" step="0.05" value="0.5" /><span class="value" id="val-vol">50%</span></div>
+      <div class="setting-row"><label>Volume</label><input type="range" id="cfg-vol" min="0" max="1" step="0.05" value="0.4" /><span class="value" id="val-vol">40%</span></div>
       <button class="back-btn" data-back="main-menu">VOLTAR</button>
     </div>
   </div>
   <div id="about-menu" class="overlay hidden">
     <div class="menu-panel">
       <h1>SOBRE</h1>
-      <p style="font-size:13px;line-height:1.5;opacity:0.85;margin:12px 0">FPV 3D com Three.js. Touch, teclado e gamepad. Mode 2: Esq=Throttle/Yaw Dir=Pitch/Roll. R=Reset M=Modo</p>
+      <p style="font-size:13px;line-height:1.5;opacity:0.85;margin:12px 0">
+        Stick esquerdo = POTENCIA dos motores (nao sobe sozinho).<br>
+        Incline com o direito para ir pra frente/tras/lado.<br>
+        ~50% throttle = hover nivelado.<br>
+        C = troca camera FPV / 3D<br>
+        R = Reset | M = Acro/Angle
+      </p>
       <button class="back-btn" data-back="main-menu">VOLTAR</button>
     </div>
   </div>
