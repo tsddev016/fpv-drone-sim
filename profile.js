@@ -162,8 +162,9 @@
       deviceInfo: detectDevice(), firstAccess: now, lastAccess: now, game,
     };
     delete store.legacy;
-    saveStore(store);
     session = { name, password: String(password), publicId: store.accounts[key].publicId, game };
+    store.lastSession = { name: session.name, publicId: session.publicId };
+    saveStore(store);
     window.__FPV_PROFILE = toRuntimeProfile();
     return { ok: true, msg: 'Conta criada' };
   }
@@ -178,8 +179,9 @@
     acc.deviceInfo = detectDevice();
     const ip = await fetchIpOnce();
     if (ip) acc.encIp = await encryptText(ip, String(password), acc.salt);
-    saveStore(store);
     session = { name: acc.name, password: String(password), publicId: acc.publicId, game: acc.game || emptyGameData() };
+    store.lastSession = { name: session.name, publicId: session.publicId };
+    saveStore(store);
     window.__FPV_PROFILE = toRuntimeProfile();
     return { ok: true, msg: 'Login ok' };
   }
@@ -209,8 +211,9 @@
     acc.encId = await encryptText(internalId, String(newPassword), salt);
     acc.publicId = publicIdFromInternal(internalId);
     acc.lastAccess = new Date().toISOString();
-    saveStore(store);
     session = { name: acc.name, password: String(newPassword), publicId: acc.publicId, game: acc.game || emptyGameData() };
+    store.lastSession = { name: session.name, publicId: session.publicId };
+    saveStore(store);
     window.__FPV_PROFILE = toRuntimeProfile();
     return { ok: true, msg: 'Senha redefinida' };
   }
@@ -221,6 +224,7 @@
   function logout() {
     persistGame();
     session = null;
+    try { delete store.lastSession; saveStore(store); } catch (_) {}
     window.__FPV_PROFILE = guestProfile();
   }
   function guestProfile() {
@@ -248,6 +252,7 @@
     if (!store.accounts[key]) return;
     store.accounts[key].game = session.game;
     store.accounts[key].lastAccess = new Date().toISOString();
+    store.lastSession = { name: session.name, publicId: session.publicId };
     saveStore(store);
     window.__FPV_PROFILE = toRuntimeProfile();
   }
@@ -269,18 +274,6 @@
     return toRuntimeProfile();
   }
   function setName() { return ensure(); }
-  async function tryActivateAdmin(code) {
-    if (!session) return { ok: false, msg: 'Faça login primeiro' };
-    if (String(code || '').trim() !== ADMIN_CODE) return { ok: false, msg: 'Código inválido' };
-    const g = session.game;
-    g.isAdmin = true; g.rank = 'ADMIN'; g.level = 9999; g.xpSeconds = 9999 * 60;
-    recomputeUnlocks(g);
-    session.publicId = '01';
-    const key = session.name.toLowerCase();
-    if (store.accounts[key]) store.accounts[key].publicId = '01';
-    persistGame();
-    return { ok: true, msg: 'OK' };
-  }
   function isUnlocked(category, id) {
     const p = ensure();
     if (p.isAdmin) return true;
@@ -288,15 +281,6 @@
   }
   function requiredLevel(category, id) {
     return (UNLOCKS[category] && UNLOCKS[category][id]) || 1;
-  }
-  async function revealSensitive() {
-    if (!session) return { ip: '', id: '' };
-    const acc = store.accounts[session.name.toLowerCase()];
-    if (!acc) return { ip: '', id: '' };
-    return {
-      ip: await decryptText(acc.encIp, session.password, acc.salt),
-      id: await decryptText(acc.encId, session.password, acc.salt),
-    };
   }
   function el(html) { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild; }
   function showAuthGate() {
@@ -337,31 +321,42 @@
       const back = document.getElementById('auth-back');
       if (back) back.style.display = id === 'auth-step-name' ? 'none' : 'block';
     };
-    let pendingName = '';
     document.getElementById('auth-next').onclick = () => {
-      const name = normalizeName(document.getElementById('auth-name').value);
-      if (name.length < 2) { msg().textContent = 'Digite um nome (mín. 2)'; return; }
-      pendingName = name; msg().textContent = '';
+      const name = (document.getElementById('auth-name').value || '').trim();
+      if (name.length < 2) { msg().textContent = 'Nome mínimo 2 caracteres'; return; }
+      msg().textContent = '';
       if (accountExists(name)) show('auth-step-login'); else show('auth-step-register');
     };
     document.getElementById('auth-login').onclick = async () => {
-      msg().textContent = 'Verificando...';
-      const r = await login(pendingName, document.getElementById('auth-pass').value);
-      msg().textContent = r.msg; if (r.ok) closeAuthGate();
+      const name = (document.getElementById('auth-name').value || '').trim();
+      const pass = document.getElementById('auth-pass').value || '';
+      const r = await login(name, pass);
+      msg().textContent = r.msg || '';
+      if (r.ok) closeAuthGate();
     };
     document.getElementById('auth-register').onclick = async () => {
-      msg().textContent = 'Criando conta...';
-      const r = await register(pendingName, document.getElementById('auth-reg-pass').value, document.getElementById('auth-reg-q').value, document.getElementById('auth-reg-a').value);
-      msg().textContent = r.msg; if (r.ok) closeAuthGate();
+      const name = (document.getElementById('auth-name').value || '').trim();
+      const pass = document.getElementById('auth-reg-pass').value || '';
+      const q = document.getElementById('auth-reg-q').value || '';
+      const a = document.getElementById('auth-reg-a').value || '';
+      const r = await register(name, pass, q, a);
+      msg().textContent = r.msg || '';
+      if (r.ok) closeAuthGate();
     };
     document.getElementById('auth-forgot').onclick = () => {
-      document.getElementById('auth-recover-q').textContent = getSecurityQuestion(pendingName) || 'Pergunta não encontrada';
+      const name = (document.getElementById('auth-name').value || '').trim();
+      const q = getSecurityQuestion(name);
+      if (!q) { msg().textContent = 'Conta não encontrada'; return; }
+      document.getElementById('auth-recover-q').textContent = q;
       show('auth-step-recover');
     };
     document.getElementById('auth-recover-go').onclick = async () => {
-      msg().textContent = 'Verificando...';
-      const r = await recover(pendingName, document.getElementById('auth-recover-a').value, document.getElementById('auth-recover-pass').value);
-      msg().textContent = r.msg; if (r.ok) closeAuthGate();
+      const name = (document.getElementById('auth-name').value || '').trim();
+      const a = document.getElementById('auth-recover-a').value || '';
+      const np = document.getElementById('auth-recover-pass').value || '';
+      const r = await recover(name, a, np);
+      msg().textContent = r.msg || '';
+      if (r.ok) closeAuthGate();
     };
     document.getElementById('auth-back').onclick = () => { msg().textContent = ''; show('auth-step-name'); };
   }
@@ -377,7 +372,7 @@
     const m = document.getElementById('prof-meta');
     if (n) n.textContent = p.authenticated ? p.name : 'Não logado';
     if (l) l.textContent = p.isAdmin ? '∞' : String(p.level || 1);
-    if (m) m.textContent = p.authenticated ? ('Level ' + (p.level || 1)) : 'Faça login para salvar';
+    if (m) m.textContent = p.authenticated ? ('Level ' + (p.level || 1) + ' · salvo neste aparelho') : 'Faça login para salvar';
     let hl = document.getElementById('hud-level');
     if (!hl) {
       const tr = document.querySelector('#hud .top-right');
@@ -385,7 +380,23 @@
     }
     if (hl) hl.textContent = !p.authenticated ? '—' : p.isAdmin ? 'ADMIN' : 'LV ' + p.level;
   }
+  function restoreSession() {
+    if (session) return;
+    const ls = store.lastSession;
+    if (!ls || !ls.name) return;
+    const key = String(ls.name).toLowerCase();
+    const acc = store.accounts[key];
+    if (!acc) return;
+    session = {
+      name: acc.name,
+      password: '',
+      publicId: acc.publicId || ls.publicId || '',
+      game: acc.game || emptyGameData(),
+    };
+    window.__FPV_PROFILE = toRuntimeProfile();
+  }
   function injectProfileUI() {
+    restoreSession();
     const main = document.querySelector('#main-menu .menu-panel');
     if (main && !document.getElementById('profile-card')) {
       const playBtn = document.getElementById('btn-play');
@@ -412,13 +423,13 @@
         }
       }
     }, 1000);
-    if (!session) setTimeout(showAuthGate, 400);
+    if (!session) setTimeout(showAuthGate, 400); else refreshProfileUI();
   }
   window.FPVProfile = {
-    ensure, save: persistGame, addPlayTime, setName, tryActivateAdmin,
+    ensure, save: persistGame, addPlayTime, setName,
     isUnlocked, requiredLevel,
-    exportPublic: () => { const p = ensure(); return { id: p.id, name: p.name || 'Piloto', level: p.level, rank: p.rank, isAdmin: !!p.isAdmin }; },
-    register, login, recover, logout, accountExists, getSecurityQuestion, revealSensitive, UNLOCKS, KEY,
+    exportPublic: () => { const p = ensure(); return { name: p.name || 'Piloto', level: p.level }; },
+    register, login, recover, logout, accountExists, getSecurityQuestion,
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectProfileUI);
   else injectProfileUI();
