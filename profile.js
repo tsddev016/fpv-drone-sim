@@ -1,8 +1,6 @@
 /**
  * FPV Profile — mini database local (localStorage)
- * Dados ficam no navegador do jogador.
- * IP publico: 1 consulta opcional a api.ipify.org.
- * Admin TSDEV (id 01) e cliente-side (F12 contorna).
+ * Dados no navegador. IP: 1x api.ipify.org. Admin TSDEV-01 e cliente-side.
  */
 (function () {
   const KEY = 'fpv_profile_v1';
@@ -48,25 +46,11 @@
   function defaultProfile() {
     const now = new Date().toISOString();
     return {
-      id: uid(),
-      name: '',
-      level: 1,
-      xpSeconds: 0,
-      isAdmin: false,
-      rank: 'PILOTO',
-      firstAccess: now,
-      lastAccess: now,
-      ip: '',
-      deviceInfo: detectDevice(),
+      id: uid(), name: '', level: 1, xpSeconds: 0, isAdmin: false, rank: 'PILOTO',
+      firstAccess: now, lastAccess: now, ip: '', deviceInfo: detectDevice(),
       unlocked: { body: ['standard'], cams: ['none', 'fpv'], stickers: ['none'], extras: ['none'] },
-      custom: {
-        bodyStyle: 'standard', camType: 'fpv', sticker: 'none', accessory: 'none',
-        bodyColor: 0x1a1a1a, armColor: 0x111111, propColor: 0xdddddd, scale: 1,
-      },
-      player: {
-        skin: 0xffdbac, hair: 0x1a1a1a, hairStyle: 'short',
-        shirt: 0x1a5cff, pants: 0x1a1a2e, shoes: 0x111111, outfit: 'tshirt',
-      },
+      custom: { bodyStyle: 'standard', camType: 'fpv', sticker: 'none', accessory: 'none', bodyColor: 0x1a1a1a, armColor: 0x111111, propColor: 0xdddddd, scale: 1 },
+      player: { skin: 0xffdbac, hair: 0x1a1a1a, hairStyle: 'short', shirt: 0x1a5cff, pants: 0x1a1a2e, shoes: 0x111111, outfit: 'tshirt' },
       stats: { flights: 0, totalSeconds: 0, resets: 0 },
     };
   }
@@ -108,9 +92,7 @@
     if (p.ip) return;
     fetch('https://api.ipify.org?format=json', { cache: 'no-store' })
       .then(r => r.json())
-      .then(j => {
-        if (j && j.ip) { p.ip = String(j.ip).slice(0, 45); save(p); }
-      })
+      .then(j => { if (j && j.ip) { p.ip = String(j.ip).slice(0, 45); save(p); } })
       .catch(() => {});
   }
 
@@ -184,6 +166,92 @@
     ensure, save, addPlayTime, setName, tryActivateAdmin,
     isUnlocked, requiredLevel, exportPublic, UNLOCKS, KEY,
   };
+
+  function injectProfileUI() {
+    const main = document.querySelector('#main-menu .menu-panel');
+    if (!main || document.getElementById('profile-card')) return;
+    const playBtn = document.getElementById('btn-play');
+    const card = document.createElement('div');
+    card.id = 'profile-card';
+    card.style.cssText = 'background:rgba(0,0,0,0.35);border:1px solid rgba(0,255,100,0.2);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:12px;line-height:1.45;color:#0f0';
+    card.innerHTML = '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div><div style="opacity:0.55;font-size:10px">PILOTO</div><div id="prof-name" style="font-weight:700;color:#9f8">Piloto</div></div><div style="text-align:right"><div style="opacity:0.55;font-size:10px">LEVEL</div><div id="prof-level" style="font-weight:700;font-size:18px;color:#0f8">1</div></div></div><div id="prof-meta" style="margin-top:6px;opacity:0.45;font-size:10px">ID · —</div><div style="margin-top:8px;display:flex;gap:6px"><input id="prof-name-input" type="text" maxlength="16" placeholder="Seu nome" style="flex:1;background:#111;border:1px solid rgba(0,255,100,0.3);color:#0f0;border-radius:8px;padding:8px 10px;font-family:monospace;font-size:12px" /><button type="button" id="btn-prof-save" style="background:linear-gradient(180deg,#0f0,#0a0);color:#000;border:none;border-radius:8px;padding:8px 12px;font-weight:700;font-size:11px;cursor:pointer">OK</button></div>';
+    if (playBtn) main.insertBefore(card, playBtn);
+    else main.appendChild(card);
+
+    const settings = document.querySelector('#settings-menu .menu-panel');
+    if (settings && !document.getElementById('admin-code')) {
+      const box = document.createElement('div');
+      box.innerHTML = '<div class="menu-section">Conta local</div><p style="font-size:11px;opacity:0.5;margin:6px 0 8px">Perfil no localStorage. Admin: codigo TSDEV-01</p><div class="setting-row"><label>Codigo admin</label><input type="password" id="admin-code" maxlength="24" placeholder="••••" style="background:#111;color:#0f0;border:1px solid rgba(0,255,100,0.3);border-radius:6px;padding:5px 8px;font-family:monospace;font-size:12px;max-width:130px" /></div><button type="button" class="menu-btn secondary" id="btn-admin-activate" style="margin-top:4px">Ativar ADMIN (local)</button><div id="admin-msg" style="font-size:11px;min-height:16px;margin-top:4px;opacity:0.7"></div>';
+      const back = settings.querySelector('.back-btn');
+      if (back) settings.insertBefore(box, back);
+      else settings.appendChild(box);
+    }
+
+    function refresh() {
+      const pr = ensure();
+      const n = document.getElementById('prof-name');
+      const l = document.getElementById('prof-level');
+      const m = document.getElementById('prof-meta');
+      const inp = document.getElementById('prof-name-input');
+      if (n) n.textContent = pr.name || 'Piloto';
+      if (l) l.textContent = pr.isAdmin ? '∞' : String(pr.level);
+      if (m) {
+        const d = pr.deviceInfo || {};
+        m.textContent = 'ID ' + String(pr.id || '').slice(0, 8) + ' · ' + (d.browser || '') + ' · ' + (d.device || '') + (pr.ip ? ' · IP ' + pr.ip : '');
+      }
+      if (inp && document.activeElement !== inp) inp.value = pr.name || '';
+      let hl = document.getElementById('hud-level');
+      if (!hl) {
+        const tr = document.querySelector('#hud .top-right');
+        if (tr) { hl = document.createElement('div'); hl.id = 'hud-level'; tr.appendChild(hl); }
+      }
+      if (hl) hl.textContent = pr.isAdmin ? 'ADMIN' : ('LV ' + pr.level);
+    }
+
+    document.getElementById('btn-prof-save')?.addEventListener('click', () => {
+      const inp = document.getElementById('prof-name-input');
+      if (inp) setName(inp.value);
+      refresh();
+    });
+    document.getElementById('btn-admin-activate')?.addEventListener('click', () => {
+      const code = document.getElementById('admin-code')?.value || '';
+      const name = document.getElementById('prof-name-input')?.value || 'TSDEV';
+      const r = tryActivateAdmin(code, name);
+      const msg = document.getElementById('admin-msg');
+      if (msg) msg.textContent = r.msg;
+      refresh();
+    });
+
+    refresh();
+    window.__FPV_REFRESH_PROFILE_UI = refresh;
+
+    let acc = 0, last = performance.now();
+    setInterval(() => {
+      const now = performance.now();
+      const dt = (now - last) / 1000;
+      last = now;
+      const hud = document.getElementById('hud');
+      if (hud && !hud.classList.contains('hidden')) {
+        acc += dt;
+        if (acc >= 1) {
+          const s = Math.floor(acc);
+          acc -= s;
+          addPlayTime(s);
+          if (window.__FPV_LEVEL_UP) {
+            window.__FPV_LEVEL_UP = null;
+            refresh();
+          } else {
+            const pr = window.__FPV_PROFILE;
+            const hl = document.getElementById('hud-level');
+            if (hl && pr) hl.textContent = pr.isAdmin ? 'ADMIN' : ('LV ' + pr.level);
+          }
+        }
+      }
+    }, 1000);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectProfileUI);
+  else injectProfileUI();
 
   ensure();
 })();
