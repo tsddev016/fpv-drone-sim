@@ -43,6 +43,31 @@ let mode = isTouchDevice ? 'angle' : 'acro';
 let controlScheme = isTouchDevice ? 'arcade' : 'mode2';
 let camMode = saved.camMode ?? 'fpv';
 let gameStarted = false;
+let playMode = 'drone';
+let walkPos = new THREE.Vector3(0, 1.7, 4);
+let walkYaw = 0;
+let cutsceneActive = false;
+let tutorialStep = 0;
+let tutorialActive = false;
+let tutProgress = 0;
+let tutTimer = 0;
+const TUTORIAL_STEPS = [
+  { t:'Bem-vindo ao FPV', d:'Aprenda em 15 passos. Use sticks ou teclado.', o:'Toque um stick ou W', check:()=> sticks.left.active||sticks.right.active||!!(window._keys&&window._keys.KeyW) },
+  { t:'Subir', d:'Arcade: stick esq. cima. Pad: potencia.', o:'Suba ate 3m', check:()=> drone.position.y >= 3 },
+  { t:'Altitude 8m', d:'Continue subindo. Veja ALT.', o:'Alcance 8m', check:()=> drone.position.y >= 8 },
+  { t:'Hover', d:'Fique entre 5 e 12m por 2s.', o:'Hover 2s', check:()=> drone.position.y>=5 && drone.position.y<=12 && tutProgress>=1 },
+  { t:'Avancar', d:'Stick esquerdo ou incline.', o:'Z < -15', check:()=> drone.position.z < -15 },
+  { t:'Girar', d:'Stick esq. lados ou A/D.', o:'Yaw > 45deg', check:()=> { const e=new THREE.Euler().setFromQuaternion(drone.quaternion,'YXZ'); return Math.abs(e.y)>0.8; } },
+  { t:'Inclinar', d:'Stick DIREITO = pitch/roll.', o:'Incline >20deg', check:()=> { const up=new THREE.Vector3(0,1,0).applyQuaternion(drone.quaternion); return Math.sqrt(up.x*up.x+up.z*up.z)>0.34; } },
+  { t:'Velocidade', d:'Combine inclinacao + movimento.', o:'8 m/s', check:()=> velocity.length()>=8 },
+  { t:'Portao', d:'Voe pelos portoes a frente.', o:'Z<-40 alt1-6', check:()=> drone.position.z < -40 && drone.position.y > 1 && drone.position.y < 6 },
+  { t:'Anel', d:'Passe por anel laranja.', o:'Z<-50 alt2-5', check:()=> drone.position.z < -50 && drone.position.y>=2 && drone.position.y<=5 },
+  { t:'Camera', d:'Botao CAM ou tecla C.', o:'Troque camera', check:()=> camMode === 'chase' || window.__tutCamToggled },
+  { t:'Angle/Acro', d:'Botao MODO ou M.', o:'Troque modo', check:()=> mode === 'acro' || window.__tutModeToggled },
+  { t:'Reset', d:'RESET ou R.', o:'Use Reset', check:()=> !!window.__tutResetUsed },
+  { t:'Altitude 20m', d:'Suba bem alto.', o:'20 metros', check:()=> drone.position.y >= 20 },
+  { t:'Completo!', d:'Parabens! Explore os mapas.', o:'Fique no ar', check:()=> drone.position.y > 2 && tutProgress>=1 },
+];
 let frameCount = 0, lastFpsTime = 0, fps = 60;
 let battery = 100;
 let envObjects = [];
@@ -121,10 +146,23 @@ function init() {
     const hint = document.getElementById('hint');
     if (hint) hint.textContent = 'Esq: andar | Dir: inclinar camera';
   }
-  setTimeout(() => {
-    const el = document.getElementById('loading');
-    if (el) { el.classList.add('hidden'); el.dataset.done = '1'; }
-  }, 400);
+  const bar = document.getElementById('load-bar');
+  const tip = document.getElementById('load-tip');
+  const tips = ['Inicializando motores...', 'Calibrando IMU...', 'Carregando mapa...', 'Preparando fisica...', 'Quase la...'];
+  let li = 0;
+  const loadIv = setInterval(() => {
+    li++;
+    if (bar) bar.style.width = Math.min(100, li * 22) + '%';
+    if (tip) tip.textContent = tips[Math.min(li, tips.length-1)];
+    if (li >= 5) {
+      clearInterval(loadIv);
+      if (bar) bar.style.width = '100%';
+      setTimeout(() => {
+        const el = document.getElementById('loading');
+        if (el) { el.classList.add('hidden'); el.dataset.done = '1'; }
+      }, 280);
+    }
+  }, 180);
 }
 function createDrone() {
   if (drone) {
@@ -186,6 +224,7 @@ function applyCameraMode() {
 }
 function toggleCamera() {
   camMode = camMode === 'fpv' ? 'chase' : 'fpv';
+  window.__tutCamToggled = true;
   applyCameraMode(); persist(); showMsg(camMode === 'fpv' ? 'CAM FPV' : 'CAM 3D');
 }
 function updateChaseCamera(dt) {
@@ -383,13 +422,6 @@ function readInput() {
     input.yaw = applyExpo(applyDeadzone(pad.axes[0] || 0, dz), expo) * sens;
     input.pitch = applyExpo(applyDeadzone(pad.axes[3] || 0, dz), expo) * sens;
     input.roll = applyExpo(applyDeadzone(pad.axes[2] || 0, dz), expo) * sens;
-    if (pad.buttons) {
-      if (pad.buttons[7] && pad.buttons[7].value > 0.05) input.throttle = Math.min(1, input.throttle + pad.buttons[7].value * 0.4);
-      if (pad.buttons[12] && pad.buttons[12].pressed) input.pitch = -1;
-      if (pad.buttons[13] && pad.buttons[13].pressed) input.pitch = 1;
-      if (pad.buttons[14] && pad.buttons[14].pressed) input.roll = -1;
-      if (pad.buttons[15] && pad.buttons[15].pressed) input.roll = 1;
-    }
     break;
   }
   if (window.__FPV_PAD_INPUT && window.__FPV_PAD_INPUT.connected) {
@@ -401,12 +433,12 @@ function readInput() {
     if (window.__FPV_PAD_INPUT && window.__FPV_PAD_INPUT.connected) ps.textContent = 'PAD · ' + (window.__FPV_PAD_INPUT.name || 'OK');
     else if (padFound) ps.textContent = 'PAD OK';
     else if (touchActive) ps.textContent = controlScheme === 'arcade' ? 'TOQUE ARCADE' : 'TOQUE M2';
-    else ps.textContent = 'No Pad — aperte um botao';
+    else ps.textContent = 'No Pad';
   }
   throttle = input.throttle;
 }
 function updatePhysics(dt) {
-  if (!gameStarted) return;
+  if (!gameStarted || playMode === 'walk') return;
   const maxRateRad = THREE.MathUtils.degToRad(CONFIG.maxRate);
   let targetWx = input.pitch * maxRateRad;
   let targetWy = input.yaw * maxRateRad * 0.45;
@@ -470,33 +502,205 @@ function updatePhysics(dt) {
   updateEngineSound(); updateChaseCamera(dt);
 }
 function resetDrone() {
+  if (!drone) return;
+  window.__tutResetUsed = true;
   drone.position.set(0, CONFIG.respawnHeight, 0);
   drone.quaternion.identity();
   velocity.set(0, 0, 0); angularVelocity.set(0, 0, 0);
   throttle = 0; battery = Math.min(100, battery + 20);
-  applyCameraMode(); showMsg('RESET');
+  if (playMode !== 'walk') applyCameraMode();
+  showMsg('RESET');
 }
 function toggleMode() {
   mode = mode === 'acro' ? 'angle' : 'acro';
+  window.__tutModeToggled = true;
   const ml = document.getElementById('mode-label');
   if (ml) ml.textContent = mode.toUpperCase();
   const bm = document.getElementById('btn-mode');
   if (bm) bm.textContent = 'MODO: ' + mode.toUpperCase();
   showMsg(mode.toUpperCase());
 }
-function startGame() {
+function hideAllOverlays() {
+  document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+}
+function showGameChrome(show) {
+  document.getElementById('hud')?.classList.toggle('hidden', !show);
+  ['btn-reset', 'btn-mode', 'btn-menu', 'btn-cam'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', !show);
+  });
+}
+function startGame(opts) {
+  opts = opts || {};
   initAudio();
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-  document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+  hideAllOverlays();
+  playMode = opts.mode || 'drone';
+  tutorialActive = playMode === 'tutorial';
+  tutorialStep = 0; tutProgress = 0; tutTimer = 0;
+  window.__tutCamToggled = false;
+  window.__tutModeToggled = false;
+  window.__tutResetUsed = false;
+  cutsceneActive = false;
+  document.getElementById('cutscene')?.classList.remove('show');
+  document.getElementById('btn-deploy')?.classList.remove('show');
+  document.getElementById('tutorial-hud')?.classList.toggle('show', tutorialActive);
+  if (playMode === 'walk') {
+    startWalkMode();
+  } else {
+    showGameChrome(true);
+    gameStarted = true;
+    controlScheme = isTouchDevice ? 'arcade' : 'mode2';
+    if (drone) drone.visible = true;
+    resetDrone();
+    if (tutorialActive) {
+      loadMap('racing');
+      updateTutorialUI();
+      showMsg('TUTORIAL · Passo 1');
+    } else {
+      showMsg(isTouchDevice ? 'Esq ANDAR · Dir INCLINAR' : 'VOA! ~50% = hover');
+    }
+  }
+}
+function startWalkMode() {
+  gameStarted = true;
+  playMode = 'walk';
+  showGameChrome(false);
+  document.getElementById('btn-menu')?.classList.remove('hidden');
+  document.getElementById('btn-deploy')?.classList.add('show');
   document.getElementById('hud')?.classList.remove('hidden');
-  ['btn-reset', 'btn-mode', 'btn-menu', 'btn-cam'].forEach(id => document.getElementById(id)?.classList.remove('hidden'));
-  gameStarted = true; resetDrone(); showMsg(isTouchDevice ? 'Esq ANDAR · Dir INCLINAR' : 'VOA! ~50% = hover');
+  if (drone) { drone.visible = false; drone.position.set(0, -10, 0); }
+  walkPos.set(0, 1.7, 6);
+  walkYaw = 0;
+  if (camera.parent === drone) drone.remove(camera);
+  if (!camera.parent) scene.add(camera);
+  camera.position.copy(walkPos);
+  camera.rotation.set(0, walkYaw, 0);
+  camera.fov = 75;
+  camera.updateProjectionMatrix();
+  showMsg('Explore · Tire o drone da mochila');
+}
+function deployDroneCutscene() {
+  if (cutsceneActive || playMode !== 'walk') return;
+  cutsceneActive = true;
+  document.getElementById('btn-deploy')?.classList.remove('show');
+  const cs = document.getElementById('cutscene');
+  const ct = document.getElementById('cutscene-text');
+  const lines = [
+    'Voce tira o drone da mochila...',
+    'Coloca no chao e liga os motores...',
+    'Decolagem! Assumindo controle FPV.'
+  ];
+  let i = 0;
+  if (cs) cs.classList.add('show');
+  function nextLine() {
+    if (ct) ct.textContent = lines[i];
+    i++;
+    if (i === 1 && drone) {
+      drone.visible = true;
+      drone.position.set(walkPos.x, 0.15, walkPos.z - 1.2);
+      drone.quaternion.identity();
+      velocity.set(0,0,0); angularVelocity.set(0,0,0);
+    }
+    if (i === 2 && drone) { drone.position.y = 1.2; throttle = 0.5; }
+    if (i >= lines.length) {
+      setTimeout(function() {
+        if (cs) cs.classList.remove('show');
+        cutsceneActive = false;
+        playMode = 'drone';
+        gameStarted = true;
+        showGameChrome(true);
+        camMode = 'fpv';
+        applyCameraMode();
+        controlScheme = isTouchDevice ? 'arcade' : 'mode2';
+        showMsg('Controle FPV ativo!');
+      }, 900);
+      return;
+    }
+    setTimeout(nextLine, 1100);
+  }
+  nextLine();
+}
+function updateWalk(dt) {
+  if (playMode !== 'walk' || cutsceneActive) return;
+  const k = window._keys || {};
+  let mx = 0, mz = 0;
+  if (k['KeyW'] || k['ArrowUp']) mz -= 1;
+  if (k['KeyS'] || k['ArrowDown']) mz += 1;
+  if (k['KeyA'] || k['ArrowLeft']) mx -= 1;
+  if (k['KeyD'] || k['ArrowRight']) mx += 1;
+  if (sticks.left.active) { mx += sticks.left.x; mz += sticks.left.y; }
+  if (sticks.right.active) walkYaw -= sticks.right.x * 1.8 * dt;
+  if (k['KeyQ']) walkYaw += 1.5 * dt;
+  if (k['KeyE']) walkYaw -= 1.5 * dt;
+  const speed = 5;
+  const cos = Math.cos(walkYaw), sin = Math.sin(walkYaw);
+  walkPos.x += (mx * cos + mz * sin) * speed * dt;
+  walkPos.z += (-mx * sin + mz * cos) * speed * dt;
+  walkPos.y = 1.7;
+  camera.position.copy(walkPos);
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = walkYaw;
+  camera.rotation.x = 0;
+  const hint = document.getElementById('hint');
+  if (hint) hint.textContent = 'WASD andar · Q/E girar · Botao: tirar drone';
+}
+function updateTutorialUI() {
+  if (!tutorialActive) return;
+  const step = TUTORIAL_STEPS[tutorialStep];
+  if (!step) return;
+  const n = document.getElementById('tut-step-num');
+  const t = document.getElementById('tut-title');
+  const d = document.getElementById('tut-desc');
+  const o = document.getElementById('tut-obj');
+  const p = document.getElementById('tut-progress');
+  if (n) n.textContent = 'PASSO ' + (tutorialStep+1) + ' / ' + TUTORIAL_STEPS.length;
+  if (t) t.textContent = step.t;
+  if (d) d.textContent = step.d;
+  if (o) o.textContent = 'Objetivo: ' + step.o;
+  if (p) p.style.width = ((tutorialStep / TUTORIAL_STEPS.length) * 100) + '%';
+}
+function updateTutorial(dt) {
+  if (!tutorialActive || !gameStarted || playMode === 'walk') return;
+  const step = TUTORIAL_STEPS[tutorialStep];
+  if (!step) return;
+  if (tutorialStep === 3 || tutorialStep === 14) {
+    if (step.check()) tutTimer += dt; else tutTimer = Math.max(0, tutTimer - dt*2);
+    tutProgress = Math.min(1, tutTimer / 2);
+  } else {
+    tutProgress = step.check() ? 1 : 0;
+  }
+  const p = document.getElementById('tut-progress');
+  if (p) {
+    const base = tutorialStep / TUTORIAL_STEPS.length;
+    p.style.width = ((base + (1/TUTORIAL_STEPS.length)*tutProgress) * 100) + '%';
+  }
+  if (tutProgress >= 1 || (tutorialStep !== 3 && tutorialStep !== 14 && step.check())) {
+    tutorialStep++;
+    tutTimer = 0; tutProgress = 0;
+    if (tutorialStep >= TUTORIAL_STEPS.length) {
+      tutorialActive = false;
+      document.getElementById('tutorial-hud')?.classList.remove('show');
+      showMsg('TUTORIAL COMPLETO!');
+      setTimeout(openMenu, 2200);
+    } else {
+      updateTutorialUI();
+      showMsg('Passo ' + (tutorialStep+1));
+    }
+  }
 }
 function openMenu() {
   gameStarted = false;
+  tutorialActive = false;
+  playMode = 'drone';
+  cutsceneActive = false;
+  document.getElementById('tutorial-hud')?.classList.remove('show');
+  document.getElementById('btn-deploy')?.classList.remove('show');
+  document.getElementById('cutscene')?.classList.remove('show');
   document.getElementById('hud')?.classList.add('hidden');
   ['btn-reset', 'btn-mode', 'btn-menu', 'btn-cam'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
   document.getElementById('main-menu')?.classList.remove('hidden');
+  if (drone) drone.visible = true;
   motorNodes.forEach(m => {
     if (m.noiseGain && audioCtx) m.noiseGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
     if (m.oscGain && audioCtx) m.oscGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
@@ -517,7 +721,10 @@ function persist() {
   });
 }
 function setupMenus() {
-  document.getElementById('btn-play')?.addEventListener('click', startGame);
+  document.getElementById('btn-play')?.addEventListener('click', () => startGame({ mode: 'drone' }));
+  document.getElementById('btn-tutorial')?.addEventListener('click', () => startGame({ mode: 'tutorial' }));
+  document.getElementById('btn-walk')?.addEventListener('click', () => startGame({ mode: 'walk' }));
+  document.getElementById('btn-deploy')?.addEventListener('click', deployDroneCutscene);
   document.getElementById('btn-maps')?.addEventListener('click', () => showOverlay('maps-menu'));
   document.getElementById('btn-drone')?.addEventListener('click', () => showOverlay('drone-menu'));
   document.getElementById('btn-settings')?.addEventListener('click', () => showOverlay('settings-menu'));
@@ -619,8 +826,14 @@ function showOverlay(id) {
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.033);
-  readInput(); updatePhysics(dt);
-  if (gameStarted) {
+  readInput();
+  if (playMode === 'walk') {
+    updateWalk(dt);
+  } else {
+    updatePhysics(dt);
+    updateTutorial(dt);
+  }
+  if (gameStarted && playMode !== 'walk') {
     const a = document.getElementById('alt'), s = document.getElementById('spd'), t = document.getElementById('thr');
     if (a) a.textContent = drone.position.y.toFixed(1);
     if (s) s.textContent = velocity.length().toFixed(1);
