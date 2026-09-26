@@ -97,6 +97,134 @@
     .shop-option.selected { border-color: #0f0; background: rgba(0,60,20,0.75); }
     .shop-option .t { font-weight: bold; display: block; margin-bottom: 2px; }
     .shop-option .d { font-size: 10px; opacity: 0.55; }
+
+    /* ===== RESPONSIVO: escala com a tela ===== */
+    :root {
+      --ui-pad: max(10px, env(safe-area-inset-left));
+      --ui-pad-r: max(10px, env(safe-area-inset-right));
+      --ui-pad-b: max(12px, env(safe-area-inset-bottom));
+      --ui-pad-t: max(10px, env(safe-area-inset-top));
+      --stick-size: clamp(96px, 28vmin, 150px);
+      --stick-knob: clamp(40px, 11vmin, 62px);
+      --btn-pad-y: clamp(10px, 2.2vmin, 16px);
+      --btn-pad-x: clamp(12px, 3vmin, 20px);
+      --btn-font: clamp(12px, 3.4vw, 16px);
+      --hud-font: clamp(11px, 2.8vw, 14px);
+      --menu-max: min(400px, 94vw);
+    }
+    #hud .top-left, #hud .top-right { font-size: var(--hud-font); top: var(--ui-pad-t); }
+    #hud .top-left { left: var(--ui-pad); }
+    #hud .top-right { right: var(--ui-pad-r); }
+    #hud .bottom { bottom: calc(var(--ui-pad-b) + 4px); font-size: clamp(10px, 2.5vw, 12px); }
+    #hud .center { font-size: clamp(16px, 5vw, 24px); }
+    .stick-base {
+      width: var(--stick-size); height: var(--stick-size);
+      bottom: calc(var(--ui-pad-b) + 16px);
+    }
+    #stick-left { left: var(--ui-pad); }
+    #stick-right { right: var(--ui-pad-r); }
+    .stick-knob { width: var(--stick-knob); height: var(--stick-knob); }
+    .stick-label { font-size: clamp(9px, 2.4vw, 11px); bottom: clamp(-20px, -4vmin, -16px); }
+    #btn-reset, #btn-mode, #btn-menu, #btn-cam {
+      padding: var(--btn-pad-y) var(--btn-pad-x);
+      font-size: clamp(11px, 2.8vw, 13px);
+      border-radius: clamp(6px, 1.5vw, 10px);
+    }
+    #btn-reset { top: calc(var(--ui-pad-t) + 4px); }
+    #btn-mode { bottom: calc(var(--stick-size) + var(--ui-pad-b) + 28px); right: var(--ui-pad-r); }
+    #btn-menu { bottom: calc(var(--stick-size) + var(--ui-pad-b) + 28px); left: var(--ui-pad); }
+    #btn-cam { bottom: calc(var(--stick-size) + var(--ui-pad-b) + 72px); right: var(--ui-pad-r); }
+    .menu-panel {
+      max-width: var(--menu-max);
+      padding: clamp(14px, 3.5vw, 28px) clamp(12px, 3vw, 24px);
+      border-radius: clamp(12px, 3vw, 20px);
+      max-height: min(92vh, 900px);
+      overflow-y: auto;
+    }
+    .menu-panel h1, #main-menu h1, #play-menu h1 {
+      font-size: clamp(18px, 5.5vw, 26px);
+    }
+    .menu-btn, #main-menu .menu-btn, #play-menu .menu-btn {
+      padding: var(--btn-pad-y) var(--btn-pad-x);
+      font-size: var(--btn-font);
+      border-radius: clamp(8px, 2vw, 12px);
+      margin: clamp(5px, 1.2vw, 8px) 0;
+    }
+    .back-btn { padding: clamp(8px, 2vw, 12px); font-size: clamp(12px, 3vw, 14px); }
+    .map-grid, .drone-grid, .shop-option-grid {
+      grid-template-columns: repeat(auto-fit, minmax(min(120px, 42vw), 1fr));
+      gap: clamp(6px, 1.5vw, 10px);
+    }
+    .map-card, .drone-card, .shop-option {
+      padding: clamp(8px, 2vw, 14px) clamp(6px, 1.5vw, 10px);
+      font-size: clamp(11px, 2.8vw, 13px);
+    }
+    .shop-tab {
+      padding: clamp(5px, 1.5vw, 8px) clamp(8px, 2vw, 12px);
+      font-size: clamp(10px, 2.6vw, 12px);
+    }
+    #drone-preview-wrap {
+      width: min(280px, 72vw);
+      height: min(280px, 72vw);
+    }
+    #drone-menu .menu-panel { max-width: min(820px, 96vw); }
+    #session-code { font-size: clamp(16px, 5vw, 22px); padding: clamp(10px, 2.5vw, 14px); }
+    #btn-deploy {
+      bottom: calc(var(--stick-size) * 0.55 + var(--ui-pad-b));
+      padding: clamp(10px, 2.5vw, 14px) clamp(16px, 4vw, 28px);
+      font-size: clamp(12px, 3.2vw, 15px);
+      max-width: 90vw;
+    }
+    #tutorial-hud { top: calc(var(--ui-pad-t) + 4px); max-width: min(420px, 94vw); }
+    #tutorial-hud .step-title { font-size: clamp(13px, 3.5vw, 16px); }
+    #tutorial-hud .step-desc { font-size: clamp(11px, 2.8vw, 13px); }
+    #loading .title { font-size: clamp(16px, 5vw, 22px); letter-spacing: clamp(2px, 1vw, 4px); }
+    #loading .logo-ring { width: clamp(64px, 18vw, 88px); height: clamp(64px, 18vw, 88px); }
+    #loading .logo-icon { font-size: clamp(28px, 8vw, 36px); }
+    #alt-controls {
+      right: var(--ui-pad-r) !important;
+      gap: clamp(8px, 2vw, 12px) !important;
+    }
+    #alt-controls button {
+      width: clamp(44px, 12vmin, 56px) !important;
+      height: clamp(44px, 12vmin, 56px) !important;
+      font-size: clamp(16px, 4.5vmin, 22px) !important;
+      border-radius: clamp(10px, 2.5vw, 14px) !important;
+    }
+    @media (max-width: 380px) {
+      :root { --stick-size: clamp(88px, 26vmin, 120px); --stick-knob: clamp(36px, 10vmin, 50px); }
+      #btn-cam { display: none; }
+      .setting-row { flex-wrap: wrap; }
+      .setting-row select, .setting-row input[type=range] { max-width: 100%; width: 100%; }
+    }
+    @media (max-height: 480px) and (orientation: landscape) {
+      :root {
+        --stick-size: clamp(72px, 22vmin, 110px);
+        --stick-knob: clamp(32px, 9vmin, 46px);
+      }
+      .stick-base { bottom: var(--ui-pad-b); }
+      #btn-mode, #btn-menu { bottom: calc(var(--stick-size) + var(--ui-pad-b) + 8px); }
+      #btn-cam { bottom: calc(var(--stick-size) + var(--ui-pad-b) + 48px); }
+      .menu-panel { max-height: 88vh; padding: 12px 14px; }
+      .menu-btn { padding: 10px 12px; margin: 4px 0; }
+      #drone-preview-wrap { width: min(180px, 40vw); height: min(180px, 40vw); }
+      #hud .top-left, #hud .top-right { font-size: 11px; }
+    }
+    @media (min-width: 768px) {
+      :root {
+        --stick-size: 150px;
+        --stick-knob: 62px;
+        --btn-font: 15px;
+        --hud-font: 13px;
+      }
+      .menu-panel { max-width: 420px; }
+      #drone-menu .menu-panel { max-width: 860px; }
+    }
+    @media (pointer: coarse) {
+      .menu-btn, .back-btn, .shop-tab, #btn-reset, #btn-mode, #btn-menu, #btn-cam {
+        min-height: 44px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -135,7 +263,6 @@
   <button id="btn-menu" class="hidden">MENU</button>
   <button id="btn-cam" class="hidden">CAM: FPV</button>
 
-  <!-- MENU PRINCIPAL: só 4 opções -->
   <div id="main-menu" class="overlay">
     <div class="menu-panel">
       <h1>FPV DRONE SIM</h1>
@@ -147,7 +274,6 @@
     </div>
   </div>
 
-  <!-- Depois de VOAR: mapas + modos -->
   <div id="play-menu" class="overlay hidden">
     <div class="menu-panel">
       <h1>JOGAR</h1>
@@ -223,51 +349,55 @@
             <div class="setting-row"><label>Bracos</label><div class="color-swatches" id="arm-colors"></div></div>
             <div class="setting-row"><label>Helices</label><div class="color-swatches" id="prop-colors"></div></div>
           </div>
-          <div id="shop-cam" class="shop-section hidden"><div class="shop-option-grid" id="shop-cam-grid"></div></div>
-          <div id="shop-stickers" class="shop-section hidden"><div class="shop-option-grid" id="shop-sticker-grid"></div></div>
-          <div id="shop-extra" class="shop-section hidden"><div class="menu-section">Acessorios</div><div class="shop-option-grid" id="shop-extra-grid"></div></div>
-          <div id="shop-player" class="shop-section hidden">
-            <div class="menu-section">Personagem (modo explorar)</div>
-            <div class="setting-row"><label>Cor da pele</label><div class="color-swatches" id="player-skin-colors"></div></div>
-            <div class="setting-row"><label>Cabelo</label><div class="color-swatches" id="player-hair-colors"></div></div>
-            <div class="menu-section">Estilo de cabelo</div>
-            <div class="shop-option-grid" id="player-hair-style"></div>
-            <div class="setting-row"><label>Camisa / blusa</label><div class="color-swatches" id="player-shirt-colors"></div></div>
-            <div class="setting-row"><label>Short / calça</label><div class="color-swatches" id="player-pants-colors"></div></div>
-            <div class="setting-row"><label>Tênis</label><div class="color-swatches" id="player-shoes-colors"></div></div>
-            <div class="menu-section">Tipo de roupa</div>
-            <div class="shop-option-grid" id="player-outfit-style"></div>
+          <div id="shop-cam" class="shop-section hidden">
+            <div class="shop-option-grid" id="shop-cam-grid"></div>
           </div>
+          <div id="shop-stickers" class="shop-section hidden">
+            <div class="shop-option-grid" id="shop-sticker-grid"></div>
+          </div>
+          <div id="shop-extra" class="shop-section hidden">
+            <div class="shop-option-grid" id="shop-extra-grid"></div>
+          </div>
+          <div id="shop-player" class="shop-section hidden">
+            <div class="menu-section">Personagem</div>
+            <div class="setting-row"><label>Pele</label><div class="color-swatches" id="player-skin"></div></div>
+            <div class="setting-row"><label>Cabelo</label><div class="color-swatches" id="player-hair"></div></div>
+            <div class="setting-row"><label>Camisa</label><div class="color-swatches" id="player-shirt"></div></div>
+            <div class="setting-row"><label>Calca</label><div class="color-swatches" id="player-pants"></div></div>
+          </div>
+          <button class="menu-btn" id="btn-apply-drone">APLICAR</button>
+          <button class="back-btn" data-back="main-menu">← VOLTAR</button>
         </div>
       </div>
-      <button class="back-btn" data-back="main-menu" id="btn-shop-back">VOLTAR / APLICAR</button>
     </div>
   </div>
 
   <div id="settings-menu" class="overlay hidden">
     <div class="menu-panel">
       <h1>CONFIG</h1>
-      <div class="setting-row"><label>Qualidade</label><select id="cfg-quality"><option value="low">Baixa</option><option value="medium" selected>Media</option><option value="high">Alta</option></select></div>
-      <div class="setting-row"><label>FOV</label><input type="range" id="cfg-fov" min="70" max="130" step="5" value="105" /><span class="value" id="val-fov">105</span></div>
-      <div class="setting-row"><label>Sens</label><input type="range" id="cfg-sens" min="0.4" max="1.6" step="0.1" value="1.0" /><span class="value" id="val-sens">1.0x</span></div>
-      <div class="setting-row"><label>Expo</label><input type="range" id="cfg-expo" min="0" max="0.8" step="0.05" value="0.3" /><span class="value" id="val-expo">0.3</span></div>
-      <div class="setting-row"><label>Rate</label><input type="range" id="cfg-rate" min="400" max="1200" step="50" value="800" /><span class="value" id="val-rate">800</span></div>
-      <div class="setting-row"><label>Deadzone</label><input type="range" id="cfg-dead" min="0" max="0.15" step="0.01" value="0.05" /><span class="value" id="val-dead">0.05</span></div>
-      <div class="setting-row"><label>Som</label><select id="cfg-sound"><option value="on" selected>On</option><option value="off">Off</option></select></div>
-      <div class="setting-row"><label>Volume</label><input type="range" id="cfg-vol" min="0" max="1" step="0.05" value="0.4" /><span class="value" id="val-vol">40%</span></div>
-      <button class="back-btn" data-back="main-menu">VOLTAR</button>
+      <div class="subtitle">Ajustes do simulador</div>
+      <div class="menu-section">Controle</div>
+      <div class="setting-row"><label>Sensibilidade</label><input type="range" id="cfg-sens" min="0.3" max="2" step="0.1" value="1" /><span class="value" id="val-sens">1.0</span></div>
+      <div class="setting-row"><label>Expo</label><input type="range" id="cfg-expo" min="0" max="0.8" step="0.05" value="0.3" /><span class="value" id="val-expo">0.30</span></div>
+      <div class="setting-row"><label>Deadzone</label><input type="range" id="cfg-dead" min="0" max="0.25" step="0.01" value="0.08" /><span class="value" id="val-dead">0.08</span></div>
+      <div class="menu-section">Grafico</div>
+      <div class="setting-row"><label>Qualidade</label>
+        <select id="cfg-quality"><option value="low">Baixa</option><option value="med" selected>Media</option><option value="high">Alta</option></select>
+      </div>
+      <div class="setting-row"><label>Som</label><input type="range" id="cfg-vol" min="0" max="1" step="0.05" value="0.6" /><span class="value" id="val-vol">60%</span></div>
+      <button class="back-btn" data-back="main-menu">← VOLTAR</button>
     </div>
   </div>
 
   <div id="about-menu" class="overlay hidden">
     <div class="menu-panel">
       <h1>SOBRE</h1>
-      <p style="font-size:13px;line-height:1.5;opacity:0.85;margin:12px 0">Menu limpo · Mapas e modos após Voar · Player no mapa · Sessão com código · Loadout 3D.</p>
-      <button class="back-btn" data-back="main-menu">VOLTAR</button>
+      <div class="subtitle">FPV Drone Sim 3D</div>
+      <p style="font-size:12px;line-height:1.5;opacity:0.75;margin:10px 0">Simulador FPV no navegador. Touch, gamepad USB/Bluetooth e PWA.</p>
+      <button class="back-btn" data-back="main-menu">← VOLTAR</button>
     </div>
   </div>
 
-  <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
   <script src="gamepad-fix.js"></script>
   <script src="shop-boot.js"></script>
   <script type="module" src="app.js"></script>
