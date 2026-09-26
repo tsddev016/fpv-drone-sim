@@ -218,7 +218,7 @@ function setupShopUI() {
       document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       const id = tab.getAttribute('data-shop');
-      ['body', 'size', 'colors', 'cam', 'stickers', 'extra'].forEach(s => {
+      ['body', 'size', 'colors', 'cam', 'stickers', 'extra', 'player'].forEach(s => {
         const el = document.getElementById('shop-' + s);
         if (el) el.classList.toggle('hidden', s !== id);
       });
