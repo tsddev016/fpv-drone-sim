@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "controllers": {
+    "profiles": [
+      {
+        "id": "standard",
+        "name": "Xbox / Standard",
+        "match": ["xbox", "xinput", "045e", "standard"],
+        "axes": {"yaw": 0, "throttle": 1, "roll": 2, "pitch": 3},
+        "invertThrottle": true
+      },
+      {
+        "id": "playstation",
+        "name": "PlayStation DualShock/DualSense",
+        "match": ["dualshock", "dualsense", "playstation", "054c", "sony", "wireless controller"],
+        "axes": {"yaw": 0, "throttle": 1, "roll": 2, "pitch": 3},
+        "invertThrottle": true
+      },
+      {
+        "id": "generic",
+        "name": "Generico / Sem marca",
+        "match": ["generic", "usb", "gamepad", "joystick", "controller"],
+        "axes": {"yaw": 0, "throttle": 1, "roll": 2, "pitch": 3},
+        "invertThrottle": true,
+        "fallbackAxes": {"yaw": 0, "throttle": 1, "roll": 3, "pitch": 2}
+      },
+      {
+        "id": "tv_remote",
+        "name": "Controle de TV / Android TV",
+        "match": ["android", "tv", "remote", "mi box", "fire tv"],
+        "axes": {"yaw": 0, "throttle": 1, "roll": 2, "pitch": 3},
+        "invertThrottle": true,
+        "useButtonsAsAxes": true
+      }
+    ]
+  },
+  "dronePresets": [
+    {"id": "balanced", "name": "Balanced", "thrust": 22, "mass": 0.55, "bodyStyle": "standard"},
+    {"id": "racer", "name": "Racer 5\"", "thrust": 28, "mass": 0.42, "bodyStyle": "slim"},
+    {"id": "freestyle", "name": "Freestyle", "thrust": 24, "mass": 0.5, "bodyStyle": "wide"},
+    {"id": "cinewhoop", "name": "Cinewhoop", "thrust": 16, "mass": 0.7, "bodyStyle": "whoop"}
+  ],
+  "bodyStyles": ["standard", "slim", "wide", "whoop"],
+  "stickers": ["none", "stripe", "x", "number"],
+  "accessories": ["none", "antenna", "ledbar", "keychain"],
+  "cameras": ["none", "fpv", "action"]
+}
