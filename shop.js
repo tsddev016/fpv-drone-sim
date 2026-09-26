@@ -44,13 +44,11 @@ function buildPreviewDrone() {
   if (C.bodyStyle === 'slim') { bodyW = 0.1; bodyD = 0.12; armLen = 0.28; armSpread = 0.09; md = 0.12; }
   if (C.bodyStyle === 'wide') { bodyW = 0.16; armLen = 0.38; armSpread = 0.14; md = 0.16; }
   if (C.bodyStyle === 'whoop') { bodyW = 0.12; armLen = 0.2; armSpread = 0.08; md = 0.1; }
-
   const bodyMat = new THREE.MeshStandardMaterial({ color: C.body, roughness: 0.35, metalness: 0.6 });
   const body = new THREE.Mesh(new THREE.BoxGeometry(bodyW, bodyH, bodyD), bodyMat);
   g.add(body);
   const top = new THREE.Mesh(new THREE.BoxGeometry(bodyW * 0.7, 0.012, bodyD * 0.7), bodyMat);
   top.position.y = bodyH * 0.55; g.add(top);
-
   const armMat = new THREE.MeshStandardMaterial({ color: C.arm, roughness: 0.45, metalness: 0.55 });
   for (let i = 0; i < 4; i++) {
     const arm = new THREE.Mesh(new THREE.BoxGeometry(armLen, 0.018, 0.028), armMat);
@@ -58,7 +56,6 @@ function buildPreviewDrone() {
     arm.position.set(Math.cos(a) * armSpread, 0, Math.sin(a) * armSpread);
     arm.rotation.y = a; g.add(arm);
   }
-
   const motorMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.7 });
   const propMat = new THREE.MeshStandardMaterial({ color: C.prop, transparent: true, opacity: 0.7, side: THREE.DoubleSide });
   const positions = [[md, 0.02, md], [-md, 0.02, md], [-md, 0.02, -md], [md, 0.02, -md]];
@@ -69,12 +66,7 @@ function buildPreviewDrone() {
     prop.position.set(pos[0], pos[1] + 0.018, pos[2]);
     prop.userData.spinDir = (i % 2 === 0) ? 1 : -1;
     g.add(prop);
-    const led = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), new THREE.MeshStandardMaterial({
-      color: i < 2 ? 0xff2222 : 0xffffff, emissive: i < 2 ? 0xff0000 : 0xaaaaaa, emissiveIntensity: 0.9
-    }));
-    led.position.set(pos[0] * 0.7, -0.01, pos[2] * 0.7); g.add(led);
   });
-
   if (C.camType === 'fpv') {
     const cam = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.03, 0.05), new THREE.MeshStandardMaterial({ color: 0x111111 }));
     cam.position.set(0, -0.005, bodyD * 0.65); g.add(cam);
@@ -82,7 +74,6 @@ function buildPreviewDrone() {
     const gp = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.04, 0.035), new THREE.MeshStandardMaterial({ color: 0x222222 }));
     gp.position.set(0, bodyH * 0.7, 0); g.add(gp);
   }
-
   if (C.sticker === 'stripe') {
     const s = new THREE.Mesh(new THREE.BoxGeometry(bodyW * 0.9, 0.002, 0.015), new THREE.MeshStandardMaterial({ color: 0xffffff }));
     s.position.y = bodyH * 0.52; g.add(s);
@@ -93,7 +84,6 @@ function buildPreviewDrone() {
     const n = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.002, 0.05), new THREE.MeshStandardMaterial({ color: 0xffee00 }));
     n.position.y = bodyH * 0.52; g.add(n);
   }
-
   if (C.accessory === 'antenna') {
     const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.12, 6), new THREE.MeshStandardMaterial({ color: 0xcccccc }));
     ant.position.set(0.04, 0.08, -0.06); ant.rotation.z = 0.3; g.add(ant);
@@ -104,7 +94,6 @@ function buildPreviewDrone() {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.025, 0.004, 6, 12), new THREE.MeshStandardMaterial({ color: 0xffaa00 }));
     ring.position.set(-0.06, -0.02, 0.06); g.add(ring);
   }
-
   const sc = C.scale || 1;
   g.scale.set(sc, sc, sc);
   return g;
@@ -122,10 +111,8 @@ function initPreview() {
   const canvas = document.getElementById('drone-preview-canvas');
   const wrap = document.getElementById('drone-preview-wrap');
   if (!canvas || !wrap) return;
-
   const w = Math.max(wrap.clientWidth || 260, 200);
   const h = Math.max(wrap.clientHeight || 260, 200);
-
   if (!preview.renderer) {
     preview.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     preview.renderer.setSize(w, h, false);
@@ -139,12 +126,7 @@ function initPreview() {
     const dl = new THREE.DirectionalLight(0xffffff, 0.95);
     dl.position.set(2, 3, 2);
     preview.scene.add(dl);
-
-    const onDown = (e) => {
-      preview.dragging = true;
-      preview.auto = false;
-      preview.lastX = e.touches ? e.touches[0].clientX : e.clientX;
-    };
+    const onDown = (e) => { preview.dragging = true; preview.auto = false; preview.lastX = e.touches ? e.touches[0].clientX : e.clientX; };
     const onMove = (e) => {
       if (!preview.dragging) return;
       const x = e.touches ? e.touches[0].clientX : e.clientX;
@@ -152,10 +134,7 @@ function initPreview() {
       preview.lastX = x;
       if (preview.mesh) preview.mesh.rotation.y = preview.rotY;
     };
-    const onUp = () => {
-      preview.dragging = false;
-      setTimeout(() => { preview.auto = true; }, 1800);
-    };
+    const onUp = () => { preview.dragging = false; setTimeout(() => { preview.auto = true; }, 1800); };
     canvas.addEventListener('mousedown', onDown);
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
@@ -165,9 +144,7 @@ function initPreview() {
   } else {
     preview.renderer.setSize(w, h, false);
   }
-
   refreshMesh();
-
   if (preview.animId) cancelAnimationFrame(preview.animId);
   const tick = () => {
     preview.animId = requestAnimationFrame(tick);
@@ -175,16 +152,7 @@ function initPreview() {
       preview.rotY += 0.01;
       preview.mesh.rotation.y = preview.rotY;
     }
-    if (preview.mesh) {
-      preview.mesh.traverse(o => {
-        if (o.userData && o.userData.spinDir) {
-          o.rotation.y += o.userData.spinDir * 0.3 * (getCustom().propSpin || 1);
-        }
-      });
-    }
-    if (preview.renderer && preview.scene && preview.camera) {
-      preview.renderer.render(preview.scene, preview.camera);
-    }
+    if (preview.renderer && preview.scene && preview.camera) preview.renderer.render(preview.scene, preview.camera);
   };
   tick();
 }
@@ -194,15 +162,22 @@ function stopPreview() {
   preview.animId = null;
 }
 
-function fillGrid(gridId, options, current, onPick) {
+function fillGrid(gridId, options, current, onPick, cat) {
   const grid = document.getElementById(gridId);
   if (!grid) return;
   grid.innerHTML = '';
   Object.entries(options).forEach(([id, info]) => {
+    const locked = cat && window.FPVProfile && !window.FPVProfile.isUnlocked(cat, id);
     const div = document.createElement('div');
-    div.className = 'shop-option' + (current === id ? ' selected' : '');
-    div.innerHTML = '<span class="t">' + info.name + '</span><span class="d">' + (info.desc || '') + '</span>';
+    div.className = 'shop-option' + (current === id && !locked ? ' selected' : '');
+    const lockTxt = locked ? (' 🔒 LV' + window.FPVProfile.requiredLevel(cat, id)) : '';
+    div.innerHTML = '<span class="t">' + info.name + lockTxt + '</span><span class="d">' + (info.desc || '') + '</span>';
+    if (locked) { div.style.opacity = '0.4'; div.dataset.locked = '1'; }
     div.addEventListener('click', () => {
+      if (locked) {
+        alert('Bloqueado — voe até o level ' + window.FPVProfile.requiredLevel(cat, id) + ' (60s = 1 level).');
+        return;
+      }
       grid.querySelectorAll('.shop-option').forEach(c => c.classList.remove('selected'));
       div.classList.add('selected');
       onPick(id);
@@ -224,25 +199,11 @@ function setupShopUI() {
       });
     });
   });
-
   const C = getCustom();
-  fillGrid('shop-body-grid', BODY, C.bodyStyle, id => {
-    getCustom().bodyStyle = id;
-    if (window.__FPV_SAVE_CUSTOM) window.__FPV_SAVE_CUSTOM();
-  });
-  fillGrid('shop-cam-grid', CAMS, C.camType, id => {
-    getCustom().camType = id;
-    if (window.__FPV_SAVE_CUSTOM) window.__FPV_SAVE_CUSTOM();
-  });
-  fillGrid('shop-sticker-grid', STICKERS, C.sticker, id => {
-    getCustom().sticker = id;
-    if (window.__FPV_SAVE_CUSTOM) window.__FPV_SAVE_CUSTOM();
-  });
-  fillGrid('shop-extra-grid', EXTRAS, C.accessory, id => {
-    getCustom().accessory = id;
-    if (window.__FPV_SAVE_CUSTOM) window.__FPV_SAVE_CUSTOM();
-  });
-
+  fillGrid('shop-body-grid', BODY, C.bodyStyle, id => { getCustom().bodyStyle = id; if (window.__FPV_SAVE_CUSTOM) window.__FPV_SAVE_CUSTOM(); }, 'body');
+  fillGrid('shop-cam-grid', CAMS, C.camType, id => { getCustom().camType = id; if (window.__FPV_SAVE_CUSTOM) window.__FPV_SAVE_CUSTOM(); }, 'cams');
+  fillGrid('shop-sticker-grid', STICKERS, C.sticker, id => { getCustom().sticker = id; if (window.__FPV_SAVE_CUSTOM) window.__FPV_SAVE_CUSTOM(); }, 'stickers');
+  fillGrid('shop-extra-grid', EXTRAS, C.accessory, id => { getCustom().accessory = id; if (window.__FPV_SAVE_CUSTOM) window.__FPV_SAVE_CUSTOM(); }, 'extras');
   const scaleEl = document.getElementById('cfg-scale');
   const scaleVal = document.getElementById('val-scale');
   if (scaleEl && scaleVal) {
@@ -272,15 +233,8 @@ export function openShop() {
   setupShopUI();
   setTimeout(() => initPreview(), 60);
 }
-
-export function closeShop() {
-  stopPreview();
-}
-
-export function notifyCustomChanged() {
-  if (preview.scene) refreshMesh();
-}
-
+export function closeShop() { stopPreview(); }
+export function notifyCustomChanged() { if (preview.scene) refreshMesh(); }
 window.__FPV_OPEN_SHOP = openShop;
 window.__FPV_CLOSE_SHOP = closeShop;
 window.__FPV_SHOP_REFRESH = notifyCustomChanged;
