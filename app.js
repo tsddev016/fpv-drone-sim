@@ -783,8 +783,33 @@ function setupPlayerCustomization() {
     });
   }
 }
+function fillPlayMapGrid() {
+  const mapGrid = document.getElementById('map-grid-play') || document.getElementById('map-grid');
+  if (!mapGrid) return;
+  mapGrid.innerHTML = '';
+  Object.entries(MAPS).forEach(([id, m]) => {
+    const card = document.createElement('div');
+    card.className = 'map-card' + (id === currentMap ? ' selected' : '');
+    card.innerHTML = '<div class="icon">' + m.icon + '</div><div class="name">' + m.name + '</div>';
+    card.addEventListener('click', () => {
+      currentMap = id;
+      mapGrid.querySelectorAll('.map-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      loadMap(id);
+      persist();
+    });
+    mapGrid.appendChild(card);
+  });
+}
 function setupMenus() {
-  document.getElementById('btn-play')?.addEventListener('click', () => openSessionMenu('drone'));
+  document.getElementById('btn-play')?.addEventListener('click', () => {
+    fillPlayMapGrid();
+    showOverlay('play-menu');
+  });
+  document.getElementById('btn-drone')?.addEventListener('click', () => showOverlay('drone-menu'));
+  document.getElementById('btn-settings')?.addEventListener('click', () => showOverlay('settings-menu'));
+  document.getElementById('btn-about')?.addEventListener('click', () => showOverlay('about-menu'));
+  document.getElementById('btn-start-fpv')?.addEventListener('click', () => openSessionMenu('drone'));
   document.getElementById('btn-tutorial')?.addEventListener('click', () => openSessionMenu('tutorial'));
   document.getElementById('btn-walk')?.addEventListener('click', () => openSessionMenu('walk'));
   document.getElementById('btn-deploy')?.addEventListener('click', deployDroneCutscene);
@@ -799,10 +824,6 @@ function setupMenus() {
     sessInput.addEventListener('keydown', e => { if (e.key === 'Enter') confirmSession(true); });
   }
   setupPlayerCustomization();
-  document.getElementById('btn-maps')?.addEventListener('click', () => showOverlay('maps-menu'));
-  document.getElementById('btn-drone')?.addEventListener('click', () => showOverlay('drone-menu'));
-  document.getElementById('btn-settings')?.addEventListener('click', () => showOverlay('settings-menu'));
-  document.getElementById('btn-about')?.addEventListener('click', () => showOverlay('about-menu'));
   document.querySelectorAll('[data-back]').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
@@ -810,21 +831,7 @@ function setupMenus() {
       persist();
     });
   });
-  const mapGrid = document.getElementById('map-grid');
-  if (mapGrid) {
-    mapGrid.innerHTML = '';
-    Object.entries(MAPS).forEach(([id, m]) => {
-      const card = document.createElement('div');
-      card.className = 'map-card' + (id === currentMap ? ' selected' : '');
-      card.innerHTML = '<div class="icon">' + m.icon + '</div><div class="name">' + m.name + '</div>';
-      card.addEventListener('click', () => {
-        currentMap = id;
-        mapGrid.querySelectorAll('.map-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected'); loadMap(id); persist();
-      });
-      mapGrid.appendChild(card);
-    });
-  }
+  fillPlayMapGrid();
   const droneGrid = document.getElementById('drone-grid');
   if (droneGrid) {
     droneGrid.innerHTML = '';
