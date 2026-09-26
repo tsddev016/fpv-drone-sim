@@ -1,3 +1,4 @@
+// Abre a loja 3D quando o menu do drone aparece
 (function () {
   function tryOpen() {
     const menu = document.getElementById('drone-menu');
