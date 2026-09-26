@@ -2,6 +2,7 @@ const CACHE = 'fpv-drone-sim-v3';
 const ASSETS = [
   './',
   './fpv.html',
+  './game.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'

@@ -47,7 +47,8 @@ Isso sobe um servidor em `http://127.0.0.1:8080/fpv.html` e abre o navegador aut
 
 ```
 fpv-drone-sim/
-├── fpv.html        # Simulador principal
+├── fpv.html        # Página principal do simulador
+├── game.js         # Lógica do jogo (Three.js)
 ├── fpv.py          # Launcher Python (servidor local)
 ├── manifest.json   # PWA
 ├── sw.js           # Service Worker
