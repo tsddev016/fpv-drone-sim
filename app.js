@@ -37,8 +37,10 @@ let drone, droneBody, props = [], arms = [], leds = [];
 let velocity = new THREE.Vector3();
 let angularVelocity = new THREE.Vector3();
 let throttle = 0;
-let input = { throttle: 0, yaw: 0, pitch: 0, roll: 0 };
-let mode = 'acro';
+let input = { throttle: 0, yaw: 0, pitch: 0, roll: 0, moveX: 0, moveY: 0 };
+const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+let mode = isTouchDevice ? 'angle' : 'acro';
+let controlScheme = isTouchDevice ? 'arcade' : 'mode2';
 let camMode = saved.camMode ?? 'fpv';
 let gameStarted = false;
 let frameCount = 0, lastFpsTime = 0, fps = 60;
@@ -105,9 +107,19 @@ function init() {
   sun.castShadow = q !== 'low';
   scene.add(sun);
   createDrone(); loadMap(currentMap); setupEvents(); setupMenus(); applyCameraMode(); animate();
-  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+  if (isTouchDevice) {
     const tc = document.getElementById('touch-controls');
     if (tc) tc.style.display = 'block';
+    const ll = document.querySelector('#stick-left .stick-label');
+    const rl = document.querySelector('#stick-right .stick-label');
+    if (ll) ll.textContent = 'MOVER';
+    if (rl) rl.textContent = 'INCLINAR CAMERA';
+    const ml = document.getElementById('mode-label');
+    if (ml) ml.textContent = 'ANGLE';
+    const bm = document.getElementById('btn-mode');
+    if (bm) bm.textContent = 'MODO: ANGLE';
+    const hint = document.getElementById('hint');
+    if (hint) hint.textContent = 'Esq: andar | Dir: inclinar camera';
   }
   setTimeout(() => {
     const el = document.getElementById('loading');
@@ -330,16 +342,32 @@ function applyDeadzone(v, dz) {
 }
 function readInput() {
   input.throttle = 0; input.yaw = 0; input.pitch = 0; input.roll = 0;
-  const dz = CONFIG.deadzone, expo = CONFIG.expo, sens = CONFIG.sensitivity;
-  if (sticks.left.active || sticks.right.active) {
+  input.moveX = 0; input.moveY = 0;
+  const dz = Math.max(CONFIG.deadzone, 0.08);
+  const expo = CONFIG.expo, sens = CONFIG.sensitivity;
+  const touchActive = sticks.left.active || sticks.right.active;
+  if (touchActive && controlScheme === 'arcade') {
+    const lx = applyExpo(applyDeadzone(sticks.left.x, dz), expo);
+    const ly = applyExpo(applyDeadzone(sticks.left.y, dz), expo);
+    const rx = applyExpo(applyDeadzone(sticks.right.x, dz), expo);
+    const ry = applyExpo(applyDeadzone(sticks.right.y, dz), expo);
+    input.moveX = lx * sens;
+    input.moveY = -ly * sens;
+    input.pitch = ry * sens;
+    input.roll = rx * sens;
+    input.yaw = lx * 0.35 * sens;
+    const hover = 0.48;
+    const climb = Math.max(0, -ly) * 0.12;
+    input.throttle = Math.min(1, hover + climb);
+  } else if (touchActive) {
     input.throttle = Math.max(0, Math.min(1, (1 - sticks.left.y) / 2));
-    input.yaw = applyExpo(applyDeadzone(-sticks.left.x, dz), expo) * sens;
+    input.yaw = applyExpo(applyDeadzone(sticks.left.x, dz), expo) * sens * 0.7;
     input.pitch = applyExpo(applyDeadzone(-sticks.right.y, dz), expo) * sens;
     input.roll = applyExpo(applyDeadzone(sticks.right.x, dz), expo) * sens;
   }
   const k = window._keys || {};
-  if (k['KeyW']) input.throttle = Math.min(1, input.throttle + 1);
-  if (k['KeyS']) input.throttle = Math.max(0, input.throttle - 0.5);
+  if (k['KeyW']) { input.throttle = Math.min(1, Math.max(input.throttle, 0.85)); input.moveY = 1; }
+  if (k['KeyS']) { input.throttle = Math.max(input.throttle, 0.35); input.moveY = -1; }
   if (k['KeyA']) input.yaw = -1;
   if (k['KeyD']) input.yaw = 1;
   if (k['ArrowUp']) input.pitch = -1;
@@ -349,12 +377,12 @@ function readInput() {
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];
   let padFound = false;
   for (const pad of pads) {
-    if (!pad) continue;
+    if (!pad || !pad.connected) continue;
     padFound = true;
-    input.throttle = Math.max(0, Math.min(1, (-(pad.axes[1]||0) + 1) / 2));
-    input.yaw = applyExpo(applyDeadzone(pad.axes[0]||0, dz), expo) * sens;
-    input.pitch = applyExpo(applyDeadzone(pad.axes[3]||0, dz), expo) * sens;
-    input.roll = applyExpo(applyDeadzone(pad.axes[2]||0, dz), expo) * sens;
+    input.throttle = Math.max(0, Math.min(1, (-(pad.axes[1] || 0) + 1) / 2));
+    input.yaw = applyExpo(applyDeadzone(pad.axes[0] || 0, dz), expo) * sens;
+    input.pitch = applyExpo(applyDeadzone(pad.axes[3] || 0, dz), expo) * sens;
+    input.roll = applyExpo(applyDeadzone(pad.axes[2] || 0, dz), expo) * sens;
     if (pad.buttons) {
       if (pad.buttons[7] && pad.buttons[7].value > 0.05) input.throttle = Math.min(1, input.throttle + pad.buttons[7].value * 0.4);
       if (pad.buttons[12] && pad.buttons[12].pressed) input.pitch = -1;
@@ -371,7 +399,9 @@ function readInput() {
   const ps = document.getElementById('pad-status');
   if (ps) {
     if (window.__FPV_PAD_INPUT && window.__FPV_PAD_INPUT.connected) ps.textContent = 'PAD · ' + (window.__FPV_PAD_INPUT.name || 'OK');
-    else ps.textContent = padFound ? 'PAD OK' : 'No Pad — aperte um botao';
+    else if (padFound) ps.textContent = 'PAD OK';
+    else if (touchActive) ps.textContent = controlScheme === 'arcade' ? 'TOQUE ARCADE' : 'TOQUE M2';
+    else ps.textContent = 'No Pad — aperte um botao';
   }
   throttle = input.throttle;
 }
@@ -379,38 +409,57 @@ function updatePhysics(dt) {
   if (!gameStarted) return;
   const maxRateRad = THREE.MathUtils.degToRad(CONFIG.maxRate);
   let targetWx = input.pitch * maxRateRad;
-  let targetWy = input.yaw * maxRateRad * 0.5;
+  let targetWy = input.yaw * maxRateRad * 0.45;
   let targetWz = input.roll * maxRateRad;
-  if (mode === 'angle') {
-    const maxTilt = THREE.MathUtils.degToRad(50);
+  if (mode === 'angle' || controlScheme === 'arcade') {
+    const maxTilt = THREE.MathUtils.degToRad(controlScheme === 'arcade' ? 45 : 55);
     const euler = new THREE.Euler().setFromQuaternion(drone.quaternion, 'YXZ');
-    const kp = 9;
+    const kp = 12;
     targetWx = (input.pitch * maxTilt - euler.x) * kp;
     targetWz = (input.roll * maxTilt - euler.z) * kp;
-    targetWy = input.yaw * maxRateRad * 0.4;
+    targetWy = input.yaw * maxRateRad * 0.5;
   }
-  const angAccel = 35;
+  const angAccel = 40;
   angularVelocity.x += (targetWx - angularVelocity.x) * Math.min(1, angAccel * dt);
   angularVelocity.y += (targetWy - angularVelocity.y) * Math.min(1, angAccel * dt);
   angularVelocity.z += (targetWz - angularVelocity.z) * Math.min(1, angAccel * dt);
-  if (Math.sqrt(input.pitch ** 2 + input.roll ** 2 + input.yaw ** 2) < 0.1) angularVelocity.multiplyScalar(0.9);
+  const stickMag = Math.sqrt((input.pitch||0)**2 + (input.roll||0)**2 + (input.yaw||0)**2 + (input.moveX||0)**2 + (input.moveY||0)**2);
+  if (stickMag < 0.08) angularVelocity.multiplyScalar(0.82);
   const wx = angularVelocity.x * dt, wy = angularVelocity.y * dt, wz = angularVelocity.z * dt;
   drone.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), wy));
   drone.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), wx));
   drone.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), wz));
   drone.quaternion.normalize();
   const up = new THREE.Vector3(0, 1, 0).applyQuaternion(drone.quaternion);
-  const force = up.multiplyScalar(throttle * CONFIG.maxThrust);
+  let thrustMul = throttle * CONFIG.maxThrust;
+  if (mode === 'angle' || controlScheme === 'arcade') {
+    const tilt = Math.sqrt(up.x * up.x + up.z * up.z);
+    thrustMul *= (1 + tilt * 0.55);
+  }
+  const force = up.multiplyScalar(thrustMul);
   force.y -= CONFIG.mass * CONFIG.gravity;
+  if (controlScheme === 'arcade' && (Math.abs(input.moveX) > 0.02 || Math.abs(input.moveY) > 0.02)) {
+    const yawOnly = new THREE.Euler().setFromQuaternion(drone.quaternion, 'YXZ');
+    const facing = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yawOnly.y, 0));
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(facing);
+    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(facing);
+    const moveSpeed = 18;
+    force.add(forward.multiplyScalar(input.moveY * moveSpeed * CONFIG.mass));
+    force.add(right.multiplyScalar(input.moveX * moveSpeed * CONFIG.mass));
+  }
   const speed = velocity.length();
-  const drag = CONFIG.drag * (1 + speed * 0.06);
-  force.x -= velocity.x * drag; force.y -= velocity.y * drag * 0.85; force.z -= velocity.z * drag;
+  const drag = CONFIG.drag * (1 + speed * 0.05);
+  force.x -= velocity.x * drag;
+  force.y -= velocity.y * drag * 0.9;
+  force.z -= velocity.z * drag;
   velocity.add(force.divideScalar(CONFIG.mass).multiplyScalar(dt));
+  const hVel = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
+  if (hVel > 28) { velocity.x *= 28 / hVel; velocity.z *= 28 / hVel; }
   const nextPos = drone.position.clone().add(velocity.clone().multiplyScalar(dt));
   if (nextPos.y < 0.08) {
     nextPos.y = 0.08;
-    if (velocity.y < 0) velocity.y *= -0.12;
-    velocity.x *= 0.8; velocity.z *= 0.8; angularVelocity.multiplyScalar(0.65);
+    if (velocity.y < 0) velocity.y *= -0.1;
+    velocity.x *= 0.75; velocity.z *= 0.75; angularVelocity.multiplyScalar(0.55);
   }
   drone.position.copy(nextPos);
   props.forEach(p => { p.rotation.y += p.userData.spinDir * (6 + throttle * 60) * dt; });
@@ -441,7 +490,7 @@ function startGame() {
   document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
   document.getElementById('hud')?.classList.remove('hidden');
   ['btn-reset', 'btn-mode', 'btn-menu', 'btn-cam'].forEach(id => document.getElementById(id)?.classList.remove('hidden'));
-  gameStarted = true; resetDrone(); showMsg('VOA! ~50% = hover');
+  gameStarted = true; resetDrone(); showMsg(isTouchDevice ? 'Esq ANDAR · Dir INCLINAR' : 'VOA! ~50% = hover');
 }
 function openMenu() {
   gameStarted = false;
