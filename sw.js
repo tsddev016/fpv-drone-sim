@@ -1,7 +1,7 @@
-const CACHE = 'fpv-drone-sim-v2';
+const CACHE = 'fpv-drone-sim-v3';
 const ASSETS = [
   './',
-  './index.html',
+  './fpv.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'

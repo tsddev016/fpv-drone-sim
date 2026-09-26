@@ -2,7 +2,7 @@
   "name": "FPV Drone Sim 3D Pro",
   "short_name": "FPV Drone",
   "description": "Simulador FPV de drone 3D com física realista, mapas, customização e suporte a controles USB/Bluetooth.",
-  "start_url": "./index.html",
+  "start_url": "./fpv.html",
   "display": "standalone",
   "orientation": "landscape",
   "background_color": "#000000",
