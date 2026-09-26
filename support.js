@@ -1,12 +1,11 @@
 /**
- * Apoiar o Dev — tela visual PIX (sem gateway ainda)
- * Preencha PIX_KEY / PIX_NAME quando for ativar de verdade.
+ * Apoiar o projeto — tela visual PIX (sem gateway ainda)
  */
 (function () {
-  const PIX_KEY = 'sua-chave-pix-aqui';
-  const PIX_NAME = 'TSDEV';
-  const PIX_CITY = 'BRASIL';
-  const PIX_MSG = 'Apoio FPV Drone Sim — obrigado!';
+  const PIX_KEY = ''; // preencher depois (ou via env no deploy)
+  const PIX_NAME = 'Desenvolvedor';
+  const PIX_CITY = 'Brasil';
+  const PIX_MSG = 'Obrigado pelo apoio!';
 
   function el(html) {
     const d = document.createElement('div');
@@ -18,84 +17,25 @@
     if (document.getElementById('support-styles')) return;
     const s = document.createElement('style');
     s.id = 'support-styles';
-    s.textContent = `
-      #support-overlay {
-        position: fixed; inset: 0; z-index: 280;
-        background: rgba(0,0,0,0.92);
-        display: flex; align-items: center; justify-content: center;
-        padding: 16px; font-family: monospace; color: #0f0;
-      }
-      #support-overlay.hidden { display: none !important; }
-      .support-card {
-        width: 100%; max-width: 380px;
-        background: linear-gradient(165deg, rgba(8,32,18,0.98), rgba(2,12,8,0.99));
-        border: 1px solid rgba(0,255,120,0.28);
-        border-radius: 18px;
-        padding: 22px 18px 18px;
-        box-shadow: 0 0 40px rgba(0,255,100,0.08);
-      }
-      .support-card h2 {
-        margin: 0 0 4px; text-align: center;
-        letter-spacing: 2px; font-size: 17px; color: #9f8;
-      }
-      .support-card .sub {
-        text-align: center; font-size: 11px; opacity: 0.45;
-        margin: 0 0 16px; line-height: 1.4;
-      }
-      .support-qr-wrap { display: flex; justify-content: center; margin-bottom: 14px; }
-      .support-qr {
-        width: 168px; height: 168px;
-        background: #0a1a10;
-        border: 2px solid rgba(0,255,100,0.35);
-        border-radius: 12px;
-        position: relative; overflow: hidden;
-        display: flex; align-items: center; justify-content: center;
-      }
-      .support-qr canvas { width: 148px; height: 148px; image-rendering: pixelated; }
-      .support-qr .badge {
-        position: absolute; bottom: 6px; right: 6px;
-        font-size: 9px; background: rgba(0,0,0,0.7);
-        padding: 2px 5px; border-radius: 4px; opacity: 0.7;
-      }
-      .support-field {
-        background: rgba(0,0,0,0.4);
-        border: 1px solid rgba(0,255,100,0.22);
-        border-radius: 10px;
-        padding: 10px 12px; margin-bottom: 10px;
-      }
-      .support-field label {
-        display: block; font-size: 10px; opacity: 0.5;
-        margin-bottom: 4px; letter-spacing: 1px;
-      }
-      .support-field .val {
-        font-size: 13px; color: #9f8; word-break: break-all; line-height: 1.35;
-      }
-      .support-actions { display: flex; gap: 8px; margin-top: 6px; }
-      .support-actions button {
-        flex: 1; padding: 12px 10px; border: none; border-radius: 10px;
-        font-family: monospace; font-weight: 700; font-size: 12px;
-        cursor: pointer; letter-spacing: 0.5px;
-      }
-      .support-actions .primary {
-        background: linear-gradient(180deg, #0f0, #0a0); color: #000;
-      }
-      .support-actions .ghost {
-        background: transparent; color: #0f0;
-        border: 1px solid rgba(0,255,100,0.35);
-      }
-      .support-note {
-        margin-top: 12px; font-size: 10px; opacity: 0.4;
-        text-align: center; line-height: 1.45;
-      }
-      .support-toast {
-        position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-        background: rgba(0,40,20,0.95); border: 1px solid rgba(0,255,100,0.4);
-        color: #0f0; padding: 10px 18px; border-radius: 10px;
-        font-family: monospace; font-size: 12px; z-index: 290;
-        opacity: 0; transition: opacity 0.25s; pointer-events: none;
-      }
-      .support-toast.show { opacity: 1; }
-    `;
+    s.textContent =
+      '#support-overlay{position:fixed;inset:0;z-index:280;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;padding:16px;font-family:system-ui,sans-serif;color:#cfe}' +
+      '#support-overlay.hidden{display:none!important}' +
+      '.support-card{width:100%;max-width:380px;background:linear-gradient(165deg,rgba(8,32,18,0.98),rgba(2,12,8,0.99));border:1px solid rgba(0,255,120,0.28);border-radius:18px;padding:22px 18px 18px}' +
+      '.support-card h2{margin:0 0 4px;text-align:center;letter-spacing:2px;font-size:17px;color:#9f8;font-family:monospace}' +
+      '.support-card .sub{text-align:center;font-size:12px;opacity:0.5;margin:0 0 16px;line-height:1.4}' +
+      '.support-qr-wrap{display:flex;justify-content:center;margin-bottom:14px}' +
+      '.support-qr{width:168px;height:168px;background:#0a1a10;border:2px solid rgba(0,255,100,0.35);border-radius:12px;display:flex;align-items:center;justify-content:center}' +
+      '.support-qr canvas{width:148px;height:148px;image-rendering:pixelated}' +
+      '.support-field{background:rgba(0,0,0,0.4);border:1px solid rgba(0,255,100,0.22);border-radius:10px;padding:10px 12px;margin-bottom:10px}' +
+      '.support-field label{display:block;font-size:10px;opacity:0.5;margin-bottom:4px;letter-spacing:1px;font-family:monospace}' +
+      '.support-field .val{font-size:13px;color:#9f8;word-break:break-all;line-height:1.35;font-family:monospace}' +
+      '.support-actions{display:flex;gap:8px;margin-top:6px}' +
+      '.support-actions button{flex:1;padding:12px 10px;border:none;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer}' +
+      '.support-actions .primary{background:linear-gradient(180deg,#0f0,#0a0);color:#000}' +
+      '.support-actions .ghost{background:transparent;color:#0f0;border:1px solid rgba(0,255,100,0.35)}' +
+      '.support-note{margin-top:12px;font-size:11px;opacity:0.4;text-align:center;line-height:1.45}' +
+      '.support-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(0,40,20,0.95);border:1px solid rgba(0,255,100,0.4);color:#0f0;padding:10px 18px;border-radius:10px;font-size:12px;z-index:290;opacity:0;transition:opacity .25s;pointer-events:none}' +
+      '.support-toast.show{opacity:1}';
     document.head.appendChild(s);
   }
 
@@ -106,9 +46,7 @@
     ctx.fillStyle = '#e8ffe8';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#062010';
-    let seed = 0;
-    const src = PIX_KEY + PIX_NAME;
-    for (let i = 0; i < src.length; i++) seed = (seed * 31 + src.charCodeAt(i)) >>> 0;
+    let seed = 7;
     function rnd() {
       seed = (seed * 1664525 + 1013904223) >>> 0;
       return seed / 0xffffffff;
@@ -133,8 +71,6 @@
         if (rnd() > 0.55) ctx.fillRect(x * cell, y * cell, cell + 0.5, cell + 0.5);
       }
     }
-    ctx.fillStyle = '#0f0';
-    ctx.fillRect((n / 2 - 1) * cell, (n / 2 - 1) * cell, cell * 2, cell * 2);
   }
 
   function toast(msg) {
@@ -153,53 +89,44 @@
     injectStyles();
     let ov = document.getElementById('support-overlay');
     if (!ov) {
+      const keyLabel = PIX_KEY ? PIX_KEY : 'Em breve';
       ov = el(
-        '<div id="support-overlay" class="hidden">' +
-        '<div class="support-card">' +
-        '<h2>❤ APOIAR O DEV</h2>' +
-        '<p class="sub">Ajude a manter o FPV Drone Sim<br>PIX · contribuição voluntária</p>' +
-        '<div class="support-qr-wrap"><div class="support-qr">' +
-        '<canvas id="support-qr-canvas" width="168" height="168"></canvas>' +
-        '<span class="badge">PREVIEW</span></div></div>' +
-        '<div class="support-field"><label>CHAVE PIX</label>' +
-        '<div class="val" id="support-pix-key">' + PIX_KEY + '</div></div>' +
-        '<div class="support-field"><label>NOME · CIDADE</label>' +
-        '<div class="val">' + PIX_NAME + ' · ' + PIX_CITY + '</div></div>' +
-        '<div class="support-actions">' +
-        '<button type="button" class="primary" id="support-copy">COPIAR CHAVE</button>' +
-        '<button type="button" class="ghost" id="support-close">FECHAR</button>' +
-        '</div>' +
-        '<p class="support-note">Tela visual por enquanto — pagamento real numa próxima atualização.<br>' +
-        PIX_MSG + '</p></div></div>'
+        '<div id="support-overlay" class="hidden"><div class="support-card">' +
+          '<h2>APOIAR O PROJETO</h2>' +
+          '<p class="sub">Contribuição voluntária via PIX</p>' +
+          '<div class="support-qr-wrap"><div class="support-qr">' +
+          '<canvas id="support-qr-canvas" width="168" height="168"></canvas></div></div>' +
+          '<div class="support-field"><label>CHAVE PIX</label><div class="val">' +
+          keyLabel +
+          '</div></div>' +
+          '<div class="support-field"><label>NOME</label><div class="val">' +
+          PIX_NAME +
+          '</div></div>' +
+          '<div class="support-actions">' +
+          '<button type="button" class="primary" id="support-copy">COPIAR</button>' +
+          '<button type="button" class="ghost" id="support-close">FECHAR</button>' +
+          '</div><p class="support-note">' +
+          PIX_MSG +
+          '</p></div></div>'
       );
       document.body.appendChild(ov);
       document.getElementById('support-close').onclick = closeSupport;
       document.getElementById('support-copy').onclick = () => {
+        if (!PIX_KEY) {
+          toast('Chave ainda não configurada');
+          return;
+        }
         if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(PIX_KEY).then(() => toast('Chave PIX copiada')).catch(() => fallbackCopy(PIX_KEY));
-        } else fallbackCopy(PIX_KEY);
+          navigator.clipboard.writeText(PIX_KEY).then(() => toast('Copiado')).catch(() => toast('Não foi possível copiar'));
+        } else toast('Não foi possível copiar');
       };
-      ov.addEventListener('click', (e) => { if (e.target === ov) closeSupport(); });
+      ov.addEventListener('click', (e) => {
+        if (e.target === ov) closeSupport();
+      });
     }
     ov.classList.remove('hidden');
     const canvas = document.getElementById('support-qr-canvas');
     if (canvas) drawFakeQr(canvas);
-  }
-
-  function fallbackCopy(text) {
-    try {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.left = '-9999px';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      toast('Chave PIX copiada');
-    } catch (_) {
-      toast('Não foi possível copiar');
-    }
   }
 
   function closeSupport() {
@@ -216,7 +143,7 @@
     btn.type = 'button';
     btn.className = 'menu-btn secondary';
     btn.id = 'btn-support';
-    btn.innerHTML = '❤ APOIAR O DEV';
+    btn.textContent = 'APOIAR';
     btn.style.borderColor = 'rgba(255,80,120,0.35)';
     btn.style.color = '#f8a';
     if (about) about.parentNode.insertBefore(btn, about);
@@ -224,7 +151,7 @@
     btn.addEventListener('click', openSupport);
   }
 
-  window.FPVSupport = { open: openSupport, close: closeSupport, PIX_KEY, PIX_NAME };
+  window.FPVSupport = { open: openSupport, close: closeSupport };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectButton);
   else injectButton();
