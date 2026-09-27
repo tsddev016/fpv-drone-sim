@@ -1,125 +1,113 @@
 /**
- * Analógico vertical bipolar de ALTURA
- * Topo  = +100 (sobe forte)
- * Centro = 0   (neutro: para de subir/descer)
- * Base  = -100 (desce)
- * window.__FPV_CLIMB em [-1, 1]
+ * Altura em 3 botoes: SOBE | PARA | DESCE
+ * + R1 sobe / R2 desce (gamepad)
+ * window.__FPV_CLIMB: -1 | 0 | 1
  */
 (function () {
-  const DEFAULT = 0; // neutro
-
   function injectUI() {
-    if (document.getElementById('throttle-container')) return;
+    if (document.getElementById('alt-btns')) return;
 
-    const style = document.createElement('style');
-    style.id = 'throttle-style';
+    var style = document.createElement('style');
+    style.id = 'alt-btns-style';
     style.textContent =
-      '#throttle-container{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(var(--stick-size,120px) + env(safe-area-inset-bottom,12px) + 28px);width:clamp(48px,12vmin,64px);height:clamp(150px,38vmin,210px);background:rgba(0,0,0,0.55);border:2px solid rgba(0,255,120,0.4);border-radius:999px;touch-action:none;z-index:45;display:none;pointer-events:auto}' +
-      '#throttle-container.show{display:block}' +
-      '#throttle-track{position:absolute;left:50%;top:14px;bottom:14px;width:4px;transform:translateX(-50%);background:linear-gradient(180deg,rgba(0,255,120,0.35),rgba(255,255,255,0.12) 50%,rgba(255,80,80,0.35));border-radius:2px}' +
-      '#throttle-hover-mark{position:absolute;left:6px;right:6px;height:2px;background:rgba(255,220,80,0.7);pointer-events:none}' +
-      '#throttle-thumb{position:absolute;left:50%;width:clamp(40px,11vmin,56px);height:clamp(40px,11vmin,56px);transform:translateX(-50%);background:radial-gradient(circle at 35% 35%,#8fa,#0a8);border:2px solid #0f0;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,0.45);touch-action:none}' +
-      '#throttle-label{position:absolute;top:4px;left:0;right:0;text-align:center;color:rgba(200,255,220,0.85);font-family:monospace;font-size:9px;letter-spacing:1px;pointer-events:none}' +
-      '#throttle-val{position:absolute;bottom:4px;left:0;right:0;text-align:center;color:#0f8;font-family:monospace;font-size:10px;pointer-events:none;font-weight:700}' +
-      '@media (max-height:420px) and (orientation:landscape){#throttle-container{height:clamp(110px,50vh,160px);bottom:calc(var(--stick-size,90px) + 12px)}}';
+      '#alt-btns{position:fixed;right:max(10px,env(safe-area-inset-right));bottom:calc(var(--stick-size,120px) + env(safe-area-inset-bottom,12px) + 20px);z-index:46;display:none;flex-direction:column;gap:8px;align-items:center;pointer-events:auto}' +
+      '#alt-btns.show{display:flex}' +
+      '.alt-btn{width:clamp(52px,14vmin,68px);height:clamp(44px,11vmin,56px);border-radius:12px;border:2px solid rgba(0,255,120,0.45);background:rgba(0,0,0,0.55);color:#9f9;font-family:monospace;font-size:clamp(11px,2.8vw,13px);font-weight:700;cursor:pointer;touch-action:manipulation;user-select:none}' +
+      '.alt-btn.active-up{background:rgba(0,180,80,0.55);border-color:#0f0;color:#cfc;box-shadow:0 0 12px rgba(0,255,100,0.35)}' +
+      '.alt-btn.active-hold{background:rgba(180,140,0,0.45);border-color:#fc0;color:#ffc}' +
+      '.alt-btn.active-down{background:rgba(180,40,40,0.5);border-color:#f44;color:#fcc;box-shadow:0 0 12px rgba(255,60,60,0.3)}' +
+      '#alt-label{font-size:9px;color:rgba(200,255,220,0.7);font-family:monospace;letter-spacing:1px;margin-bottom:2px}' +
+      '#alt-val{font-size:11px;font-family:monospace;font-weight:700;color:#fc8}' +
+      '@media (max-height:420px) and (orientation:landscape){#alt-btns{bottom:calc(var(--stick-size,90px) + 8px);gap:4px}.alt-btn{height:36px;width:48px;font-size:10px}}';
     document.head.appendChild(style);
 
-    const box = document.createElement('div');
-    box.id = 'throttle-container';
+    var box = document.createElement('div');
+    box.id = 'alt-btns';
     box.innerHTML =
-      '<div id="throttle-label">ALTURA</div>' +
-      '<div id="throttle-track"></div>' +
-      '<div id="throttle-hover-mark"></div>' +
-      '<div id="throttle-thumb"></div>' +
-      '<div id="throttle-val">0</div>';
+      '<div id="alt-label">ALTURA</div>' +
+      '<button type="button" class="alt-btn" data-climb="1" id="alt-up">▲ SOBE</button>' +
+      '<button type="button" class="alt-btn active-hold" data-climb="0" id="alt-hold">■ PARA</button>' +
+      '<button type="button" class="alt-btn" data-climb="-1" id="alt-down">▼ DESCE</button>' +
+      '<div id="alt-val">PARA</div>';
     document.body.appendChild(box);
 
-    const thumb = document.getElementById('throttle-thumb');
-    const mark = document.getElementById('throttle-hover-mark');
-    const valEl = document.getElementById('throttle-val');
-    let dragging = false;
+    var valEl = document.getElementById('alt-val');
 
-    function maxTravel() {
-      return Math.max(1, box.clientHeight - thumb.clientHeight - 8);
-    }
-
-    /** climb in [-1, 1] */
     function setClimb(c) {
-      c = Math.max(-1, Math.min(1, c));
-      if (Math.abs(c) < 0.06) c = 0;
+      c = c > 0.5 ? 1 : c < -0.5 ? -1 : 0;
       window.__FPV_CLIMB = c;
       window.__FPV_THROTTLE = (c + 1) / 2;
 
-      const travel = maxTravel();
-      const bottom = ((c + 1) / 2) * travel + 4;
-      thumb.style.bottom = bottom + 'px';
-      thumb.style.top = 'auto';
-
+      box.querySelectorAll('.alt-btn').forEach(function (btn) {
+        btn.classList.remove('active-up', 'active-hold', 'active-down');
+        var v = parseInt(btn.getAttribute('data-climb'), 10);
+        if (v === c) {
+          if (c > 0) btn.classList.add('active-up');
+          else if (c < 0) btn.classList.add('active-down');
+          else btn.classList.add('active-hold');
+        }
+      });
       if (valEl) {
-        const pct = Math.round(c * 100);
-        valEl.textContent = (pct > 0 ? '+' : '') + pct;
-        valEl.style.color = c > 0.05 ? '#0f8' : c < -0.05 ? '#f66' : '#fc8';
-      }
-      if (thumb) {
-        if (c > 0.05) thumb.style.borderColor = '#0f0';
-        else if (c < -0.05) thumb.style.borderColor = '#f44';
-        else thumb.style.borderColor = '#fc0';
+        valEl.textContent = c > 0 ? 'SOBE' : c < 0 ? 'DESCE' : 'PARA';
+        valEl.style.color = c > 0 ? '#0f8' : c < 0 ? '#f66' : '#fc8';
       }
     }
 
-    function fromClientY(clientY) {
-      const rect = box.getBoundingClientRect();
-      const travel = maxTravel();
-      let yFromTop = clientY - rect.top - thumb.clientHeight / 2;
-      if (yFromTop < 0) yFromTop = 0;
-      if (yFromTop > travel) yFromTop = travel;
-      return 1 - (2 * yFromTop / travel);
-    }
-
-    function placeMark() {
-      const travel = maxTravel();
-      mark.style.bottom = 0.5 * travel + thumb.clientHeight / 2 + 'px';
-    }
-
-    box.addEventListener('pointerdown', (e) => {
-      dragging = true;
-      box.setPointerCapture(e.pointerId);
-      setClimb(fromClientY(e.clientY));
-      e.preventDefault();
+    box.querySelectorAll('.alt-btn').forEach(function (btn) {
+      function press(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        setClimb(parseInt(btn.getAttribute('data-climb'), 10));
+      }
+      btn.addEventListener('pointerdown', press);
+      btn.addEventListener('click', press);
     });
-    box.addEventListener('pointermove', (e) => {
-      if (!dragging) return;
-      setClimb(fromClientY(e.clientY));
-      e.preventDefault();
-    });
-    function endDrag(e) {
-      if (!dragging) return;
-      dragging = false;
-      try { box.releasePointerCapture(e.pointerId); } catch (_) {}
-    }
-    box.addEventListener('pointerup', endDrag);
-    box.addEventListener('pointercancel', endDrag);
 
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'PageUp') setClimb((window.__FPV_CLIMB || 0) + 0.1);
-      if (e.code === 'PageDown') setClimb((window.__FPV_CLIMB || 0) - 0.1);
+    window.addEventListener('keydown', function (e) {
+      if (e.code === 'PageUp') setClimb(1);
+      if (e.code === 'PageDown') setClimb(-1);
       if (e.code === 'Home') setClimb(0);
     });
 
-    setInterval(() => {
-      const hud = document.getElementById('hud');
-      const flying = hud && !hud.classList.contains('hidden');
-      const deploy = document.getElementById('btn-deploy');
-      const walk = deploy && deploy.classList.contains('show');
+    var prevR1 = false, prevR2 = false;
+    function pollPad() {
+      try {
+        var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+        for (var i = 0; i < pads.length; i++) {
+          var p = pads[i];
+          if (!p) continue;
+          var r1 = p.buttons[5] && p.buttons[5].pressed;
+          var r2 = p.buttons[7] && p.buttons[7].pressed;
+          var l1 = p.buttons[4] && p.buttons[4].pressed;
+          var l2 = p.buttons[6] && p.buttons[6].pressed;
+          if (r1 || l1) {
+            if (!prevR1) setClimb(1);
+            prevR1 = true;
+          } else prevR1 = false;
+          if (r2 || l2) {
+            if (!prevR2) setClimb(-1);
+            prevR2 = true;
+          } else prevR2 = false;
+        }
+      } catch (e) {}
+      requestAnimationFrame(pollPad);
+    }
+    requestAnimationFrame(pollPad);
+
+    setInterval(function () {
+      var hud = document.getElementById('hud');
+      var flying = hud && !hud.classList.contains('hidden');
+      var deploy = document.getElementById('btn-deploy');
+      var walk = deploy && deploy.classList.contains('show');
       box.classList.toggle('show', !!flying && !walk);
-      if (flying) placeMark();
     }, 300);
 
-    setClimb(DEFAULT);
-    placeMark();
+    setClimb(0);
     window.__FPV_SET_CLIMB = setClimb;
     window.__FPV_SET_THROTTLE = function (t) {
-      setClimb(t * 2 - 1);
+      if (t > 0.6) setClimb(1);
+      else if (t < 0.4) setClimb(-1);
+      else setClimb(0);
     };
   }
 
