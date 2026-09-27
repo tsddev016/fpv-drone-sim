@@ -1,2 +1,1 @@
-/* reservado — o jogo carrega via app.js */
-export {};
+// LEGADO — nao usado. Ver README.md e game-loader.js

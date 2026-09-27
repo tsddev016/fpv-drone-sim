@@ -1,1 +1,1 @@
-PLACEHOLDER_PART_0
+// LEGADO — nao usado. Ver README.md
