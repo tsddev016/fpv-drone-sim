@@ -1,8 +1,15 @@
 /**
- * R1 sobe | R2 desce | L3 PARA
- * L1 freio de ar | L2 turbo
+ * R1 = SOBE | R2 = DESCE | L3 = PARA
+ * L1 = FREIO DE AR | L2 = TURBO
+ * L1/L2 NUNCA controlam altura
  */
 (function () {
+  function pressed(btn) {
+    if (!btn) return false;
+    if (typeof btn.value === 'number' && btn.value > 0.35) return true;
+    return !!btn.pressed;
+  }
+
   function injectUI() {
     if (document.getElementById('alt-btns')) return;
 
@@ -84,26 +91,45 @@
     window.__FPV_TURBO = false;
 
     var prevR1 = false, prevR2 = false, prevL3 = false;
+
     function pollPad() {
       try {
         var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+        var sawPad = false;
+        var air = false, turbo = false;
+
         for (var i = 0; i < pads.length; i++) {
           var p = pads[i];
-          if (!p) continue;
-          var r1 = !!(p.buttons[5] && p.buttons[5].pressed);
-          var r2 = !!(p.buttons[7] && p.buttons[7].pressed);
-          var l1 = !!(p.buttons[4] && p.buttons[4].pressed);
-          var l2 = !!(p.buttons[6] && p.buttons[6].pressed);
-          var l3 = !!(p.buttons[10] && p.buttons[10].pressed);
+          if (!p || !p.connected) continue;
+          sawPad = true;
 
+          var r1 = pressed(p.buttons[5]);
+          var r2 = pressed(p.buttons[7]);
+          var l1 = pressed(p.buttons[4]);
+          var l2 = pressed(p.buttons[6]);
+          var l3 = pressed(p.buttons[10]);
+
+          if (p.axes && p.axes.length >= 6) {
+            var aL2 = p.axes[2], aR2 = p.axes[5];
+            if (typeof aL2 === 'number' && aL2 > 0.4) l2 = true;
+            if (typeof aR2 === 'number' && aR2 > 0.4) r2 = true;
+          }
+
+          // APENAS R1/R2/L3 mudam altura
           if (r1) { if (!prevR1) setClimb(1); prevR1 = true; } else prevR1 = false;
           if (r2) { if (!prevR2) setClimb(-1); prevR2 = true; } else prevR2 = false;
           if (l3) { if (!prevL3) setClimb(0); prevL3 = true; } else prevL3 = false;
 
-          window.__FPV_AIRBRAKE = l1;
-          window.__FPV_TURBO = l2;
+          if (l1) air = true;
+          if (l2) turbo = true;
+        }
+
+        if (sawPad) {
+          window.__FPV_AIRBRAKE = air;
+          window.__FPV_TURBO = turbo;
         }
       } catch (e) {}
+
       var h = document.getElementById('pad-hints');
       if (h) {
         h.innerHTML =
