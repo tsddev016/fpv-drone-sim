@@ -1,5 +1,5 @@
 
-(function(){var a=['ui-fix.js','models-boost.js','menu-cursor.js','unlock-code.js'];a.forEach(function(src){if(document.querySelector('script[src="'+src+'"]'))return;var s=document.createElement('script');s.src=src;document.head.appendChild(s);});})();
+(function(){var a=['ui-fix.js','models-boost.js','menu-cursor.js','unlock-code.js','maps-boost.js'];a.forEach(function(src){if(document.querySelector('script[src="'+src+'"]'))return;var s=document.createElement('script');s.src=src;document.head.appendChild(s);});})();
 // FPV loader
 (function(){if(document.getElementById('throttle-control-js'))return;var s=document.createElement('script');s.id='throttle-control-js';s.src='throttle-control.js';document.head.appendChild(s);})();
 setTimeout(function(){try{var el=document.getElementById('loading');if(el&&!el.classList.contains('hidden')){el.classList.add('hidden');el.dataset.done='1';}}catch(e){}},15000);
