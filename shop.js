@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
 let preview = {
   renderer: null, scene: null, camera: null, mesh: null,
@@ -30,11 +30,14 @@ const EXTRAS = {
 };
 
 function getCustom() {
-  return window.__FPV_CUSTOM || {
-    bodyStyle: 'standard', scale: 1, camType: 'fpv',
-    sticker: 'none', accessory: 'none', propSpin: 1,
-    body: 0x1a1a1a, arm: 0x111111, prop: 0xdddddd,
-  };
+  if (!window.__FPV_CUSTOM) {
+    window.__FPV_CUSTOM = {
+      bodyStyle: 'standard', scale: 1, camType: 'fpv',
+      sticker: 'none', accessory: 'none', propSpin: 1,
+      body: 0x1a1a1a, arm: 0x111111, prop: 0xdddddd,
+    };
+  }
+  return window.__FPV_CUSTOM;
 }
 
 function buildPreviewDrone() {

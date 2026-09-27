@@ -1,5 +1,4 @@
-// Loader + patch: throttle dedicado (__FPV_THROTTLE)
-// carrega o analógico de altura
+// Loader + patches: throttle dedicado, sem gravidade, sticks corrigidos, cam no player
 (function loadThrottleUI() {
   if (document.getElementById('throttle-control-js')) return;
   var s = document.createElement('script');
@@ -55,6 +54,37 @@ try {
     "import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';"
   );
 
+  // === PATCH: sem gravidade ===
+  code = code.replace(/gravity:\s*9\.81/, 'gravity: 0');
+  code = code.replace(/force\.y\s*-=\s*CONFIG\.mass\s*\*\s*CONFIG\.gravity;/, '/* gravity removed */');
+  code = code.replace(
+    /\(CONFIG\.mass\s*\*\s*CONFIG\.gravity\)/g,
+    '(0)'
+  );
+
+  // === PATCH: inverter roll (esquerda/direita) e pitch (frente/trás) nos sticks ===
+  // arcade touch
+  code = code.replace(
+    'input.pitch = -ry * sens;\n    input.roll = rx * sens;',
+    'input.pitch = ry * sens;\n    input.roll = -rx * sens;'
+  );
+  // mode2 touch
+  code = code.replace(
+    'input.pitch = applyExpo(applyDeadzone(-sticks.right.y, dz), expo) * sens;\n    input.roll = applyExpo(applyDeadzone(sticks.right.x, dz), expo) * sens;',
+    'input.pitch = applyExpo(applyDeadzone(sticks.right.y, dz), expo) * sens;\n    input.roll = applyExpo(applyDeadzone(-sticks.right.x, dz), expo) * sens;'
+  );
+  // teclado mode2
+  code = code.replace(
+    "if (k['ArrowUp']) input.pitch = -1;\n    if (k['ArrowDown']) input.pitch = 1;\n    if (k['ArrowLeft']) input.roll = -1;\n    if (k['ArrowRight']) input.roll = 1;",
+    "if (k['ArrowUp']) input.pitch = 1;\n    if (k['ArrowDown']) input.pitch = -1;\n    if (k['ArrowLeft']) input.roll = 1;\n    if (k['ArrowRight']) input.roll = -1;"
+  );
+  // gamepad
+  code = code.replace(
+    'input.pitch = applyExpo(applyDeadzone(pad.axes[3] || 0, dz), expo) * sens;\n    input.roll = applyExpo(applyDeadzone(pad.axes[2] || 0, dz), expo) * sens;',
+    'input.pitch = applyExpo(applyDeadzone(-(pad.axes[3] || 0), dz), expo) * sens;\n    input.roll = applyExpo(applyDeadzone(-(pad.axes[2] || 0), dz), expo) * sens;'
+  );
+
+  // === PATCH: throttle dedicado (__FPV_THROTTLE) ===
   if (!code.includes('__FPV_THROTTLE_PATCH')) {
     code = code.replace(
       'throttle = input.throttle;\n}',
@@ -70,6 +100,17 @@ try {
       'input.yaw = lx * 0.12 * sens;\n    input.throttle = (typeof window.__FPV_THROTTLE === "number") ? window.__FPV_THROTTLE : hoverT;'
     );
   }
+
+  // === PATCH: botão câmera no modo player (walk) ===
+  code = code.replace(
+    "showGameChrome(false);\n  document.getElementById('btn-menu')?.classList.remove('hidden');\n  document.getElementById('btn-deploy')?.classList.add('show');",
+    "showGameChrome(false);\n  document.getElementById('btn-menu')?.classList.remove('hidden');\n  document.getElementById('btn-cam')?.classList.remove('hidden');\n  document.getElementById('btn-deploy')?.classList.add('show');"
+  );
+
+  // garantir btn-cam visível no CSS mobile landscape
+  const styleFix = document.createElement('style');
+  styleFix.textContent = '@media (max-height:420px) and (orientation:landscape){#btn-cam{display:block!important}} #btn-cam{display:block}';
+  document.head.appendChild(styleFix);
 
   const blob = new Blob([code], { type: 'text/javascript' });
   await import(URL.createObjectURL(blob));
