@@ -130,6 +130,22 @@ code = code.replace(/const MAPS = \{[\s\S]*?\};/, `const MAPS = {
 };`);
 code = code.replace("if (mn) mn.textContent = m.name.toUpperCase();", "window.__FPV_CURRENT_MAP = mapId;\n  window.__FPV_SCENE = scene;\n  window.__FPV_DRONE = drone;\n  window.__FPV_CAMERA = camera;\n  window.THREE = THREE;\n  if (typeof window.__FPV_AFTER_MAP === 'function') { try { window.__FPV_AFTER_MAP(mapId, scene, addEnv, THREE, drone, camera); } catch(e) { console.warn(e); } }\n  if (mn) mn.textContent = m.name.toUpperCase();");
 
+// Tutorial facil — 8 passos
+code = code.replace(
+  /const TUTORIAL_STEPS = \[[\s\S]*?\];/,
+  `const TUTORIAL_STEPS = [
+  { t: 'Bem-vindo!', d: 'Mova qualquer stick na tela ou aperte W no teclado.', o: 'Mover o controle', check: () => sticks.left.active || sticks.right.active || !!(window._keys && (window._keys.KeyW || window._keys.ArrowUp)) },
+  { t: 'Subir', d: 'Aperte SOBE (direita), R1 ou PageUp. Suba ate uns 3 metros.', o: 'Altitude >= 3 m', check: () => drone.position.y >= 3 },
+  { t: 'Pairar', d: 'Aperte PARA (botao do meio), L3 ou Home. Fique entre 3 e 10 m.', o: 'Ficar pairando', check: () => drone.position.y >= 3 && drone.position.y <= 10 },
+  { t: 'Ir em frente', d: 'Empurre o stick esquerdo para cima (ou W) e avance.', o: 'Avancar no mapa', check: () => drone.position.z < -12 },
+  { t: 'Virar', d: 'Gire o drone (yaw) com o stick esquerdo para os lados ou A/D.', o: 'Girar o drone', check: () => { const e = new THREE.Euler().setFromQuaternion(drone.quaternion, 'YXZ'); return Math.abs(e.y) > 0.5; } },
+  { t: 'Inclinar', d: 'Use o stick direito para inclinar (pitch/roll). No teclado: setas.', o: 'Inclinar o drone', check: () => { const up = new THREE.Vector3(0,1,0).applyQuaternion(drone.quaternion); return Math.sqrt(up.x*up.x+up.z*up.z) > 0.25; } },
+  { t: 'Camera e modo', d: 'Toque no botao CAM e no botao MODO (ou C e M no teclado).', o: 'Trocar CAM ou MODO', check: () => camMode === 'chase' || window.__tutCamToggled || window.__tutModeToggled || mode === 'angle' },
+  { t: 'Pronto!', d: 'Voce ja sabe o basico. Explore os mapas e a loja. Bom voo!', o: 'Manter no ar', check: () => drone.position.y > 1.5 },
+];`
+);
+code = code.replace('if (tutorialStep === 3 || tutorialStep === 14) {', 'if (tutorialStep === 2) {');
+
 window.__FPV_CLIMB = 0;
 const blob = new Blob([code], { type: 'text/javascript' });
 await import(URL.createObjectURL(blob));
