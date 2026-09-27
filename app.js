@@ -1,4 +1,4 @@
-// Loader — Three.js por URL completa (funciona sem importmap)
+// Loader + patch: throttle dedicado (__FPV_THROTTLE)
 setTimeout(function () {
   try {
     var el = document.getElementById('loading');
@@ -41,11 +41,30 @@ try {
   }
   if (!code) throw lastErr || new Error('não carregou');
 
-  // Troca import bare "three" por URL completa (sem importmap)
+  // Three.js por URL completa
   code = code.replace(
     /import\s*\*\s*as\s*THREE\s*from\s*['"]three['"]\s*;?/,
     "import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';"
   );
+
+  // === PATCH: throttle dedicado do analógico de altura ===
+  // No fim do readInput, sobrescreve throttle se o slider estiver ativo
+  if (!code.includes('__FPV_THROTTLE_PATCH')) {
+    code = code.replace(
+      'throttle = input.throttle;\n}',
+      'if (typeof window.__FPV_THROTTLE === "number") {\n' +
+        '    input.throttle = Math.max(0, Math.min(1, window.__FPV_THROTTLE));\n' +
+        '  }\n' +
+        '  throttle = input.throttle;\n' +
+        '  window.__FPV_THROTTLE_PATCH = 1;\n' +
+        '}'
+    );
+    // No arcade, não forçar só hover quando o slider existe
+    code = code.replace(
+      'input.yaw = lx * 0.12 * sens;\n    input.throttle = hoverT;',
+      'input.yaw = lx * 0.12 * sens;\n    input.throttle = (typeof window.__FPV_THROTTLE === "number") ? window.__FPV_THROTTLE : hoverT;'
+    );
+  }
 
   const blob = new Blob([code], { type: 'text/javascript' });
   await import(URL.createObjectURL(blob));
