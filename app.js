@@ -1,7 +1,4 @@
-import * as THREE from 'three';
-
-// Carrega o jogo do mesmo repositório (commit com o código completo)
-// Sem isso o site fica no loading para sempre.
+// Loader — Three.js por URL completa (funciona sem importmap)
 setTimeout(function () {
   try {
     var el = document.getElementById('loading');
@@ -10,7 +7,7 @@ setTimeout(function () {
       el.dataset.done = '1';
     }
   } catch (e) {}
-}, 12000);
+}, 15000);
 
 function fail(msg) {
   var el = document.getElementById('loading');
@@ -43,14 +40,20 @@ try {
     }
   }
   if (!code) throw lastErr || new Error('não carregou');
-  // remove import three — já importamos acima
-  code = code.replace(/^import\s*\*\s*as\s*THREE\s*from\s*['"]three['"]\s*;?\s*/m, '');
+
+  // Troca import bare "three" por URL completa (sem importmap)
+  code = code.replace(
+    /import\s*\*\s*as\s*THREE\s*from\s*['"]three['"]\s*;?/,
+    "import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';"
+  );
+
   const blob = new Blob([code], { type: 'text/javascript' });
   await import(URL.createObjectURL(blob));
+
   setTimeout(function () {
     var el = document.getElementById('loading');
     if (el) { el.classList.add('hidden'); el.dataset.done = '1'; }
-  }, 400);
+  }, 500);
 } catch (e) {
   console.error(e);
   fail('Não foi possível baixar o jogo.<br>Verifique a internet e tente de novo.');
