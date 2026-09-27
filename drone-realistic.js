@@ -17,32 +17,22 @@
   function loadStickers(THREE, cb) {
     stickerTextures.stripe = makeCanvasTex(THREE, function (ctx, w, h) {
       ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = 'rgba(255,255,255,0.95)';
-      ctx.fillRect(0, h * 0.15, w, h * 0.14);
-      ctx.fillStyle = 'rgba(255,40,40,0.95)';
-      ctx.fillRect(0, h * 0.38, w, h * 0.14);
-      ctx.fillStyle = 'rgba(255,255,255,0.95)';
-      ctx.fillRect(0, h * 0.61, w, h * 0.14);
+      ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fillRect(0, h * 0.15, w, h * 0.14);
+      ctx.fillStyle = 'rgba(255,40,40,0.95)'; ctx.fillRect(0, h * 0.38, w, h * 0.14);
+      ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fillRect(0, h * 0.61, w, h * 0.14);
     }, 256, 128);
-
     stickerTextures.x = makeCanvasTex(THREE, function (ctx, w, h) {
       ctx.clearRect(0, 0, w, h);
-      ctx.strokeStyle = 'rgba(255,30,30,0.95)';
-      ctx.lineWidth = 18;
-      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(255,30,30,0.95)'; ctx.lineWidth = 18; ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(40, 40); ctx.lineTo(w - 40, h - 40); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(w - 40, 40); ctx.lineTo(40, h - 40); ctx.stroke();
     });
-
     stickerTextures.number = makeCanvasTex(THREE, function (ctx, w, h) {
       ctx.clearRect(0, 0, w, h);
       ctx.fillStyle = 'rgba(255,220,0,0.98)';
-      ctx.font = 'bold 160px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 160px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText('7', w / 2, h / 2);
     });
-
     stickerTextures.skull = makeCanvasTex(THREE, function (ctx, w, h) {
       ctx.clearRect(0, 0, w, h);
       ctx.fillStyle = 'rgba(240,240,240,0.95)';
@@ -52,7 +42,6 @@
       ctx.beginPath(); ctx.ellipse(w*0.62, h*0.4, 16, 18, 0, 0, Math.PI*2); ctx.fill();
       ctx.beginPath(); ctx.moveTo(w/2, h*0.52); ctx.lineTo(w*0.42, h*0.68); ctx.lineTo(w*0.58, h*0.68); ctx.fill();
     });
-
     stickerTextures.flame = makeCanvasTex(THREE, function (ctx, w, h) {
       ctx.clearRect(0, 0, w, h);
       var grd = ctx.createLinearGradient(0, 0, 0, h);
@@ -66,18 +55,15 @@
       ctx.bezierCurveTo(w*0.85, h*0.7, w*0.8, h*0.4, w/2, 20);
       ctx.fill();
     });
-
     stickerTextures.check = makeCanvasTex(THREE, function (ctx, w, h) {
       ctx.clearRect(0, 0, w, h);
       var s = 32;
-      for (var y = 0; y < h; y += s) {
+      for (var y = 0; y < h; y += s)
         for (var x = 0; x < w; x += s) {
           ctx.fillStyle = ((x/s + y/s) % 2 === 0) ? 'rgba(20,20,20,0.95)' : 'rgba(240,240,240,0.95)';
           ctx.fillRect(x, y, s, s);
         }
-      }
     }, 256, 128);
-
     if (cb) cb();
   }
 
@@ -86,11 +72,10 @@
     var bodyCol = colors.body != null ? colors.body : 0x2a2a2e;
     var armCol = colors.arm != null ? colors.arm : 0x1a1a1c;
     var propCol = colors.prop != null ? colors.prop : 0x111111;
-
     var g = new THREE.Group();
     g.name = 'fpv-realistic';
 
-    var carbon = new THREE.MeshStandardMaterial({ color: bodyCol, roughness: 0.45, metalness: 0.55 });
+    var carbon = new THREE.MeshStandardMaterial({ color: bodyCol, roughness: 0.4, metalness: 0.65 });
     var bottomPlate = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.008, 0.16), carbon);
     bottomPlate.position.y = -0.012; bottomPlate.castShadow = true; g.add(bottomPlate);
     var topPlate = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.008, 0.14), carbon);
@@ -128,10 +113,8 @@
       arm.position.set(Math.cos(angle) * 0.04, 0, Math.sin(angle) * 0.04);
       arm.rotation.y = angle; g.add(arm);
       motorPositions.push([
-        Math.cos(angle) * (0.04 + armLen - 0.01),
-        0.02,
-        Math.sin(angle) * (0.04 + armLen - 0.01),
-        i
+        Math.cos(angle) * (0.04 + armLen - 0.01), 0.02,
+        Math.sin(angle) * (0.04 + armLen - 0.01), i
       ]);
     }
 
@@ -147,7 +130,6 @@
       bell.position.y = 0.018; motorG.add(bell);
       var shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.02, 6), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9 }));
       shaft.position.y = 0.028; motorG.add(shaft);
-
       var propG = new THREE.Group();
       for (var b = 0; b < 2; b++) {
         var blade = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.002, 0.028), propMat);
@@ -194,6 +176,22 @@
       g.add(decal);
     }
 
+    for (var lp = 0; lp < 4; lp++) {
+      var la = (lp * Math.PI) / 2 + Math.PI / 4;
+      var pad = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.012, 0.014, 0.008, 8),
+        new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 })
+      );
+      pad.position.set(Math.cos(la) * 0.08, -0.055, Math.sin(la) * 0.08);
+      g.add(pad);
+    }
+    var gopro = new THREE.Mesh(
+      new THREE.BoxGeometry(0.02, 0.01, 0.025),
+      new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.4 })
+    );
+    gopro.position.set(0, -0.02, 0.07);
+    g.add(gopro);
+
     g.userData.props = props;
     g.userData.realistic = true;
     return g;
@@ -223,8 +221,7 @@
       }
     } catch (e) {}
 
-    var sticker = colors.sticker || 'none';
-    var model = buildRealisticDrone(THREE, colors, sticker);
+    var model = buildRealisticDrone(THREE, colors, colors.sticker || 'none');
     drone.add(model);
     drone.userData.realisticDone = true;
     drone.userData.realisticModel = model;
@@ -259,9 +256,8 @@
 
   function boot() {
     setInterval(function () {
-      if (window.__FPV_DRONE && !(window.__FPV_DRONE.userData && window.__FPV_DRONE.userData.realisticDone)) {
+      if (window.__FPV_DRONE && !(window.__FPV_DRONE.userData && window.__FPV_DRONE.userData.realisticDone))
         tryEnhance();
-      }
     }, 800);
     setTimeout(tryEnhance, 1500);
     setTimeout(tryEnhance, 3500);
