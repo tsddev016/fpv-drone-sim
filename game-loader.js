@@ -80,6 +80,22 @@ code = code.replace(
 );
 code = code.replace('velocity.y = THREE.MathUtils.clamp(velocity.y, -20, 12);', 'velocity.y = THREE.MathUtils.clamp(velocity.y, -25, 25);');
 code = code.replace("showGameChrome(false);\n  document.getElementById('btn-menu')?.classList.remove('hidden');\n  document.getElementById('btn-deploy')?.classList.add('show');", "showGameChrome(false);\n  document.getElementById('btn-menu')?.classList.remove('hidden');\n  document.getElementById('btn-cam')?.classList.remove('hidden');\n  document.getElementById('btn-deploy')?.classList.add('show');");
+
+code = code.replace(
+  /const MAPS = \{[\s\S]*?\};/,
+  `const MAPS = {
+  abandoned: { name: 'Cidade Abandonada', icon: 'A', fog: 0x6a7a88, ground: 0x4a4a42, sky: 0x6a7a88 },
+  city: { name: 'Cidade Ativa', icon: 'C', fog: 0x87b0d0, ground: 0x3a3a40, sky: 0x87b0d0 },
+  freestyle: { name: 'Freestyle', icon: 'F', fog: 0x6a8faf, ground: 0x4a5a3a, sky: 0x6a8faf },
+  forest_night: { name: 'Floresta Noturna', icon: 'N', fog: 0x050510, ground: 0x1a1a14, sky: 0x050510 },
+  racing: { name: 'Racing', icon: 'R', fog: 0x87CEEB, ground: 0x3a7d3a, sky: 0x87CEEB },
+};`
+);
+code = code.replace(
+  "if (mn) mn.textContent = m.name.toUpperCase();",
+  "window.__FPV_CURRENT_MAP = mapId;\n  window.__FPV_SCENE = scene;\n  window.__FPV_DRONE = drone;\n  window.__FPV_CAMERA = camera;\n  if (typeof window.__FPV_AFTER_MAP === 'function') { try { window.__FPV_AFTER_MAP(mapId, scene, addEnv, THREE, drone, camera); } catch(e) { console.warn(e); } }\n  if (mn) mn.textContent = m.name.toUpperCase();"
+);
+
 window.__FPV_CLIMB = 0;
 const blob = new Blob([code], { type: 'text/javascript' });
 await import(URL.createObjectURL(blob));
