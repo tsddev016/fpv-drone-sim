@@ -1,257 +1,118 @@
-# FPV Drone Sim — Simulador FPV no navegador
+# FPV Drone Sim
 
-Simulador de drone **FPV** em 3D no browser (Three.js).  
-Funciona em **PC**, **celular** e **Smart TV** pelo navegador.
+> Simulador de drone **FPV** em 3D no navegador — PC, celular e TV.
 
-**Jogar:** após o deploy na Vercel, abra o link no Chrome / Safari / Edge.
-
----
-
-## Índice
-
-1. [Como jogar](#como-jogar)
-2. [Controles](#controles)
-3. [Mapas](#mapas)
-4. [Sistemas do jogo](#sistemas-do-jogo)
-5. [Loja e customização](#loja-e-customização)
-6. [Qualidade / modo Ultra](#qualidade--modo-ultra)
-7. [Código secreto](#código-secreto)
-8. [Arquitetura dos arquivos](#arquitetura-dos-arquivos)
-9. [Histórico de atualizações](#histórico-de-atualizações)
-10. [Roadmap PC / instalador / mobile](#roadmap-pc--instalador--mobile)
-11. [Desenvolvimento](#desenvolvimento)
+[![Three.js](https://img.shields.io/badge/Three.js-0.160-black)](https://threejs.org/)
+[![Vercel](https://img.shields.io/badge/Deploy-Vercel-black)](https://vercel.com/)
 
 ---
 
-## Como jogar
+## Jogar
 
-1. Abra o site no navegador.
-2. No menu principal: **VOAR AGORA** (ou modo caminhada / tutorial).
-3. Escolha o **mapa** e inicie a sessão.
-4. Use sticks na tela, teclado ou **controle USB/Bluetooth**.
+Abra o site no **Chrome**, **Safari** ou **Edge** (após o deploy na Vercel).
 
-### Atalhos rápidos
-
-| Tecla | Ação |
-|-------|------|
-| **R** | Reset do drone |
-| **M** | Alterna ACRO / ANGLE |
-| **C** | Câmera FPV / 3D |
-| **F** | Lanterna (mapa noturno) |
-| **V** | Liga/desliga efeito VHS |
-| **Q** | Freio de ar (segure) |
-| **E** | Turbo (segure) |
-| **PageUp / Home / PageDown** | Sobe / Para / Desce |
-| **Esc** | Menu |
+| Plataforma | Como |
+|------------|------|
+| PC | Mouse, teclado ou controle USB/Bluetooth |
+| Celular | Sticks na tela + botões de altura |
+| Controle | R1/R2 altura · L1 freio · L2 turbo · L3 pairar |
 
 ---
 
-## Controles
+## Controles rápidos
 
-### Touch (celular)
+### Altura
+| Ação | Touch | Teclado | Gamepad |
+|------|-------|---------|---------|
+| Subir | botão **SOBE** | PageUp | **R1** |
+| Pairar | botão **PARA** | Home | **L3** |
+| Descer | botão **DESCE** | PageDown | **R2** |
 
-- **Stick esquerdo:** movimento / yaw (modo arcade)
-- **Stick direito:** pitch / roll
-- **3 botões de altura (direita):** SOBE · PARA · DESCE
+### Outros
+| Ação | Tecla | Gamepad |
+|------|-------|---------|
+| Freio de ar | **Q** | **L1** |
+| Turbo | **E** | **L2** |
+| Reset | **R** | — |
+| Câmera FPV/3D | **C** | — |
+| Modo Acro/Angle | **M** | — |
+| Lanterna (noite) | **F** | — |
+| VHS | **V** | — |
 
-### Teclado (PC)
+No **menu**, o D-pad move um cursor; **A** confirma; **B** volta.
 
-- **WASD / setas:** movimento e inclinação
-- **PageUp / Home / PageDown:** altura
+---
 
-### Gamepad (recomendado)
+## Tutorial (novo · 8 passos)
 
-| Botão | Função |
-|-------|--------|
-| **R1** | Sobe |
-| **R2** | Desce |
-| **L3** (clique stick esquerdo) | **PARA** (neutro / paira) |
-| **L1** | **Freio de ar** (segura) — *não* sobe/desce |
-| **L2** | **Turbo** (segura) — *não* sobe/desce |
-| **D-pad / stick esquerdo** | No **menu**: move o **cursor** na tela |
-| **A / botão 0** | Confirma no menu |
-| **B / botão 1** | Voltar no menu |
+1. Mover os sticks  
+2. Subir (~3 m)  
+3. Pairar (PARA / L3)  
+4. Avançar  
+5. Girar (yaw)  
+6. Inclinar  
+7. Trocar câmera ou modo  
+8. Concluir  
 
-> **Importante:** L1 e L2 **não** controlam altura. Só R1/R2/L3 e os botões na tela.
+Objetivo: aprender o básico em poucos minutos.
 
 ---
 
 ## Mapas
 
-| ID | Nome | Conteúdo |
-|----|------|----------|
-| `abandoned` | **Cidade Abandonada** | Casas deterioradas, carros enferrujados, postes apagados |
-| `city` | **Cidade Ativa** | Prédios, casas, carros, postes acesos, neon |
-| `freestyle` | **Freestyle** | Estruturas + gates para manobra |
-| `forest_night` | **Floresta Noturna** | Árvores densas, cabanas iluminadas, **lanterna**, **VHS** |
-| `racing` | **Racing** | Gates de corrida |
+| Mapa | Destaque |
+|------|----------|
+| Cidade Abandonada | Casas velhas, carros, postes apagados |
+| Cidade Ativa | Prédios, neon, postes acesos |
+| Freestyle | Gates e manobras |
+| Floresta Noturna | Escuro, lanterna, efeito VHS |
+| Racing | Portões de corrida |
 
-### Interações nos mapas
-
-- **Janelas quebráveis:** colidir com o vidro → estilhaços.
-- **Floresta noturna:** botão de lanterna ou tecla **F**; tecla **V** (VHS).
+Janelas quebráveis · vento no modo Ultra · trincas na câmera ao colidir.
 
 ---
 
-## Sistemas do jogo
+## Estrutura do projeto
 
-### Física de voo
+```text
+fpv-drone-sim/
+├── index.html          # Interface (menus, HUD)
+├── app.js              # Entrada: carrega patches + game-loader
+├── game-loader.js      # Core + patches (física, tutorial, mapas)
+├── vercel.json         # Deploy
+│
+├── throttle-control.js # SOBE / PARA / DESCE + ombros do pad
+├── drone-realistic.js  # Modelo 3D do drone
+├── camera-damage.js    # Trincas / quebra da câmera
+├── maps-boost.js       # Mapas detalhados
+├── visual-boost.js     # Texturas, luz, céu
+├── ultra-mode.js       # Vento + FX Ultra
+├── tutorial-boost.js   # Tutorial fácil
+├── menu-cursor.js      # Cursor no menu (D-pad)
+├── unlock-code.js      # Código secreto
+├── ui-fix.js          # Scroll e ajustes de UI
+├── shop.js / shop-boot.js / profile.js
+│
+├── docs/
+│   └── CHANGELOG.md    # Histórico das mudanças
+└── README.md           # Este arquivo
+```
 
-- Modo **ACRO** (padrão): rates altos, 360° / flips.
-- Modo **ANGLE**: limita inclinação.
-- **Altura bipolar em 3 estados:** SOBE / PARA / DESCE (não sobe sozinho no neutro).
-- **Realismo:**
-  - Cambalhota → perde velocidade
-  - Mergulho → ganha velocidade
-  - Subida → perde velocidade horizontal
-  - **Vento** (mais forte no Ultra)
-  - **Freio L1** / **Turbo L2**
-
-### Câmera (dano)
-
-- Cada batida (chão ou objeto) → **trinca** na lente (`CAM 1/5` … `5/5`).
-- **5ª batida** → câmera quebra → reset automático.
-- Impacto em alta velocidade (~36 km/h / ~10 m/s) → quebra **na hora**.
-- Overlay visual de rachaduras na tela.
-
-Arquivo: `camera-damage.js`.
-
-### Modelo 3D do drone
-
-Modelo procedural detalhado:
-
-- Placas de carbono, FC, ESCs
-- Bateria LiPo + XT60 + cintas
-- Braços em X, motores com bell, hélices 2 pás girando
-- Câmera FPV inclinada + lente
-- Antena SMA, LEDs frente/trás
-- **Figurinhas** (texturas canvas): stripe, X, número 7, caveira, chama, xadrez
-
-Arquivo: `drone-realistic.js`.
-
-### Loja / perfil
-
-- Customização de cores do drone e personagem.
-- Código de desbloqueio no menu.
-- Scroll nos menus (mouse e touch).
-
----
-
-## Qualidade / modo Ultra
-
-Em **Configurações → Qualidade** existe a opção:
-
-**Ultra (vento + FX)**
-
-- Vento dinâmico + indicador na HUD
-- Bloom / god rays / grain
-- Sombras mais suaves e materiais com mais contraste
-- Tone mapping ACES
-
-> Ray tracing real de GPU no browser é limitado; o Ultra usa iluminação + pós-processamento + vento.
+Arquivos antigos de build (`app.part*`, `app.b64*`, etc.) são restos e podem ser ignorados.
 
 ---
 
 ## Código secreto
 
-No **menu principal**, campo **CÓDIGO**:
+No menu principal → campo **CÓDIGO**:
 
 ```text
 FPV-KING-360
 ```
 
-Desbloqueia itens da loja / perfil.
-
 ---
 
-## Arquitetura dos arquivos
-
-| Arquivo | Função |
-|---------|--------|
-| `index.html` | UI, menus, HUD, CSS base |
-| `app.js` | Loader: scripts de patch + `game-loader.js` |
-| `game-loader.js` | Baixa o core e aplica patches |
-| `throttle-control.js` | Altura + R1/R2/L1/L2/L3 |
-| `drone-realistic.js` | Modelo 3D + figurinhas |
-| `camera-damage.js` | Trincas / quebra de câmera |
-| `maps-boost.js` | Mapas, vidro, lanterna, VHS |
-| `ultra-mode.js` | Ultra, vento, FX |
-| `menu-cursor.js` | Cursor D-pad nos menus |
-| `unlock-code.js` | Código secreto |
-| `ui-fix.js` | Scroll, HUD settings |
-| `shop.js` / `shop-boot.js` | Loja 3D |
-| `profile.js` | Perfil / progresso |
-| `vercel.json` | Deploy Vercel |
-
-O **core** de física/render é carregado de um commit fixo e **patchado em runtime** por `game-loader.js`.
-
----
-
-## Histórico de atualizações
-
-### Controles e altura
-- [x] 3 botões de altura (SOBE / PARA / DESCE)
-- [x] Neutro real (não sobe sozinho)
-- [x] R1 sobe · R2 desce · L3 para
-- [x] L1 freio · L2 turbo (separados da altura)
-- [x] Inversão de sticks corrigida
-- [x] Cursor no menu com D-pad
-- [x] Scroll em config/loja
-
-### Física e câmera
-- [x] ACRO com 360° / rates altos
-- [x] Perda de speed no flip; ganho no mergulho
-- [x] Trinca de câmera (5 hits / quebra em alta velocidade)
-- [x] Reset automático ao quebrar a câmera
-
-### Visual e mapas
-- [x] Modelo de drone realista (procedural)
-- [x] Figurinhas com textura
-- [x] Mapas: abandonada, cidade, freestyle, floresta noturna, racing
-- [x] Janelas quebráveis
-- [x] Lanterna + VHS na floresta noturna
-- [x] Modo Ultra (vento, FX, sombras)
-
-### Meta / loja
-- [x] Código de desbloqueio
-- [x] HUD customizável
-- [x] README completo
-
----
-
-## Roadmap PC / instalador / mobile
-
-### Agora (navegador)
-Foco atual: **web** (Vercel) — zero instalação.
-
-### Próximo — PC (instalador)
-1. **Electron** ou **Tauri** com o mesmo HTML/JS
-2. Ou servidor local em **Python** + janela
-3. Instalador (Inno Setup / NSIS) extrai HTML, JS, assets, modelos, figurinhas
-
-Estrutura futura sugerida:
-
-```text
-desktop/
-  main.js
-  package.json
-  installer/
-assets/
-  stickers/
-  models/
-  textures/
-```
-
-### Depois — Android (APK)
-- Capacitor ou TWA a partir do build web
-- APK com assets offline
-
-### TV
-- Browser da TV ou Android TV com o mesmo pacote web
-
----
-
-## Desenvolvimento
+## Desenvolvimento local
 
 ```bash
 git clone https://github.com/tsddev016/fpv-drone-sim.git
@@ -260,11 +121,19 @@ npx serve .
 # ou: python -m http.server 8080
 ```
 
-Abra `http://localhost:8080`. Deploy: Vercel + `vercel.json`.
+---
+
+## Roadmap
+
+- [x] Controles de altura + freio/turbo
+- [x] Tutorial fácil (8 passos)
+- [x] Mapas + drone detalhado + câmera com dano
+- [ ] Modelos `.glb` profissionais
+- [ ] App desktop (Electron/Tauri) + instalador
+- [ ] APK (Capacitor)
 
 ---
 
-## Créditos
+## Licença
 
-- Three.js — render 3D
-- Repo: `tsddev016/fpv-drone-sim`
+A definir pelo autor do repositório (**tsddev016**).
