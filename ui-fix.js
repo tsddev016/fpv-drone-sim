@@ -2,21 +2,86 @@
   var css = document.createElement('style');
   css.id = 'ui-fix-scroll';
   css.textContent = [
-    'canvas,#touch-controls,.stick-base,#throttle-container,#btn-reset,#btn-mode,#btn-menu,#btn-cam,#btn-deploy{touch-action:none}',
-    '.overlay,.menu-panel,#drone-shop-panel,.shop-tabs{touch-action:pan-y;-webkit-overflow-scrolling:touch}',
-    '.overlay{justify-content:flex-start!important;overflow-y:auto!important;overflow-x:hidden;padding-bottom:40px;overscroll-behavior:contain}',
-    '.menu-panel{max-height:min(92vh,900px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}',
-    '#drone-shop-panel{max-height:min(70vh,520px)!important;overflow-y:auto!important;touch-action:pan-y}',
-    '.shop-tabs{flex-wrap:nowrap!important;overflow-x:auto;overflow-y:hidden;touch-action:pan-x;padding-bottom:6px}',
-    '#hud.hud-classic{color:#0f0}',
-    '#hud.hud-minimal{color:#cfc;opacity:0.7}',
-    '#hud.hud-minimal .bottom{display:none}',
-    '#hud.hud-race{color:#ffcc00;text-shadow:0 0 6px #f80}',
-    '#hud.hud-military{color:#9f9;letter-spacing:1px}',
-    '#hud.hud-off{display:none!important}',
-    '#crosshair.off{display:none!important}'
+    '.overlay, .overlay * { touch-action: pan-y !important; }',
+    '.overlay input, .overlay select, .overlay button, .overlay .swatch, .overlay .shop-tab, .overlay .shop-option, .overlay .menu-btn, .overlay .back-btn { touch-action: manipulation !important; }',
+    '.overlay {',
+    '  justify-content: flex-start !important;',
+    '  align-items: center !important;',
+    '  overflow-y: scroll !important;',
+    '  overflow-x: hidden !important;',
+    '  -webkit-overflow-scrolling: touch !important;',
+    '  overscroll-behavior: contain;',
+    '  padding-top: 24px !important;',
+    '  padding-bottom: 48px !important;',
+    '  pointer-events: auto !important;',
+    '}',
+    '.menu-panel {',
+    '  max-height: none !important;',
+    '  overflow: visible !important;',
+    '  margin: 12px auto 40px auto !important;',
+    '  pointer-events: auto !important;',
+    '}',
+    '#drone-menu .menu-panel { max-height: none !important; }',
+    '#drone-shop-panel {',
+    '  max-height: min(60vh, 480px) !important;',
+    '  overflow-y: scroll !important;',
+    '  -webkit-overflow-scrolling: touch !important;',
+    '  touch-action: pan-y !important;',
+    '  overscroll-behavior: contain;',
+    '  pointer-events: auto !important;',
+    '}',
+    '.shop-tabs {',
+    '  flex-wrap: nowrap !important;',
+    '  overflow-x: auto !important;',
+    '  overflow-y: hidden !important;',
+    '  touch-action: pan-x !important;',
+    '  -webkit-overflow-scrolling: touch;',
+    '  padding-bottom: 8px;',
+    '}',
+    'canvas, #touch-controls, .stick-base, #throttle-container,',
+    '#btn-reset, #btn-mode, #btn-menu, #btn-cam, #btn-deploy { touch-action: none !important; }',
+    '#hud.hud-classic { color: #0f0; }',
+    '#hud.hud-minimal { color: #cfc; opacity: 0.75; }',
+    '#hud.hud-minimal .bottom { display: none; }',
+    '#hud.hud-race { color: #ffcc00; text-shadow: 0 0 6px #f80; }',
+    '#hud.hud-military { color: #9f9; letter-spacing: 1px; }',
+    '#hud.hud-off { display: none !important; }',
+    '#crosshair.off { display: none !important; }',
+    '.back-btn { position: relative; z-index: 6; margin-top: 16px !important; }'
   ].join('\n');
   document.head.appendChild(css);
+
+  document.addEventListener('wheel', function (e) {
+    var overlay = e.target.closest && e.target.closest('.overlay');
+    if (!overlay || overlay.classList.contains('hidden')) return;
+    var panel = e.target.closest && e.target.closest('#drone-shop-panel');
+    if (panel) {
+      panel.scrollTop += e.deltaY;
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    overlay.scrollTop += e.deltaY;
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive: false, capture: true });
+
+  var touchY = 0, scrollEl = null;
+  document.addEventListener('touchstart', function (e) {
+    var o = e.target.closest && e.target.closest('.overlay:not(.hidden), #drone-shop-panel');
+    if (!o) { scrollEl = null; return; }
+    if (e.target.closest && e.target.closest('.stick-base, #throttle-container, canvas')) {
+      scrollEl = null; return;
+    }
+    scrollEl = o;
+    touchY = e.touches[0].clientY;
+  }, { passive: true, capture: true });
+  document.addEventListener('touchmove', function (e) {
+    if (!scrollEl || !e.touches[0]) return;
+    var dy = touchY - e.touches[0].clientY;
+    touchY = e.touches[0].clientY;
+    scrollEl.scrollTop += dy;
+  }, { passive: true, capture: true });
 
   function fixPlayerIds() {
     var map = {
@@ -62,16 +127,14 @@
       '<select id="cfg-crosshair"><option value="on">Sim</option><option value="off">Nao</option></select></div>' +
       '<div class="menu-section">Voo</div>' +
       '<div class="setting-row"><label>Modo padrao</label>' +
-      '<select id="cfg-flight-mode"><option value="acro">Acro</option><option value="angle">Angle</option></select></div>' +
+      '<select id="cfg-flight-mode"><option value="acro" selected>Acro (360)</option><option value="angle">Angle</option></select></div>' +
       '<div class="setting-row"><label>Rates</label>' +
-      '<input type="range" id="cfg-rate" min="400" max="1200" step="50" value="900" /><span class="value" id="val-rate">900</span></div>';
+      '<input type="range" id="cfg-rate" min="600" max="1800" step="50" value="1400" /><span class="value" id="val-rate">1400</span></div>';
     if (back) panel.insertBefore(block, back);
     else panel.appendChild(block);
     if (back) {
       back.id = 'btn-settings-back';
-      back.style.position = 'relative';
-      back.style.zIndex = '5';
-      back.style.marginTop = '16px';
+      back.style.marginTop = '20px';
     }
   }
 
@@ -81,11 +144,6 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
-  setTimeout(boot, 500);
-  setTimeout(boot, 2000);
-
-  document.addEventListener('wheel', function (e) {
-    var o = e.target.closest && e.target.closest('.overlay, .menu-panel, #drone-shop-panel');
-    if (o) e.stopPropagation();
-  }, { passive: true, capture: true });
+  setTimeout(boot, 400);
+  setTimeout(boot, 1500);
 })();
