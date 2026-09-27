@@ -1,6 +1,6 @@
 /**
  * Altura em 3 botoes: SOBE | PARA | DESCE
- * R1/L1 sobe | R2/L2 desce
+ * R1/L1 sobe | R2/L2 desce | L3 = PARA (neutro)
  * window.__FPV_CLIMB: -1 | 0 | 1
  */
 (function () {
@@ -66,7 +66,7 @@
       if (e.code === 'Home') setClimb(0);
     });
 
-    var prevR1 = false, prevR2 = false;
+    var prevR1 = false, prevR2 = false, prevL3 = false;
     function pollPad() {
       try {
         var pads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -77,8 +77,11 @@
           var r2 = !!(p.buttons[7] && p.buttons[7].pressed);
           var l1 = !!(p.buttons[4] && p.buttons[4].pressed);
           var l2 = !!(p.buttons[6] && p.buttons[6].pressed);
+          // L3 = botao 10 (clique do stick esquerdo) -> PARA / neutro
+          var l3 = !!(p.buttons[10] && p.buttons[10].pressed);
           if (r1 || l1) { if (!prevR1) setClimb(1); prevR1 = true; } else prevR1 = false;
           if (r2 || l2) { if (!prevR2) setClimb(-1); prevR2 = true; } else prevR2 = false;
+          if (l3) { if (!prevL3) setClimb(0); prevL3 = true; } else prevL3 = false;
         }
       } catch (e) {}
       requestAnimationFrame(pollPad);
