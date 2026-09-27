@@ -1,13 +1,9 @@
-/**
- * Modelos 3D mais detalhados + gates de corrida + personagem visível
- */
 (function () {
   function ensurePlayerDetail() {
     if (typeof window.setupPlayerCustomization === 'function') {
       try { window.setupPlayerCustomization(); } catch (e) {}
     }
   }
-
   document.addEventListener('click', function (e) {
     const tab = e.target && e.target.closest && e.target.closest('.shop-tab');
     if (tab && tab.getAttribute('data-shop') === 'player') {
@@ -29,11 +25,9 @@
       }, 100);
     }
   });
-
   document.addEventListener('wheel', function (e) {
     const overlay = e.target.closest && e.target.closest('.overlay, .menu-panel, #drone-shop-panel');
     if (overlay) e.stopPropagation();
   }, { passive: true, capture: true });
-
   setTimeout(ensurePlayerDetail, 1500);
 })();
