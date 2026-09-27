@@ -1,7 +1,6 @@
 /**
- * Altura em 3 botoes: SOBE | PARA | DESCE
- * R1/L1 sobe | R2/L2 desce | L3 = PARA (neutro)
- * window.__FPV_CLIMB: -1 | 0 | 1
+ * R1 sobe | R2 desce | L3 PARA
+ * L1 freio de ar | L2 turbo
  */
 (function () {
   function injectUI() {
@@ -17,7 +16,10 @@
       '.alt-btn.active-hold{background:rgba(180,140,0,0.45);border-color:#fc0;color:#ffc}' +
       '.alt-btn.active-down{background:rgba(180,40,40,0.5);border-color:#f44;color:#fcc}' +
       '#alt-label{font-size:9px;color:rgba(200,255,220,0.7);font-family:monospace;letter-spacing:1px}' +
-      '#alt-val{font-size:11px;font-family:monospace;font-weight:700;color:#fc8}';
+      '#alt-val{font-size:11px;font-family:monospace;font-weight:700;color:#fc8}' +
+      '#pad-hints{position:fixed;left:12px;bottom:calc(var(--stick-size,120px)+28px);z-index:45;font-family:monospace;font-size:10px;color:rgba(180,255,200,0.55);pointer-events:none;display:none;line-height:1.5}' +
+      '#pad-hints.show{display:block}' +
+      '#pad-hints .on{color:#0f8;font-weight:700}';
     document.head.appendChild(style);
 
     var box = document.createElement('div');
@@ -29,6 +31,12 @@
       '<button type="button" class="alt-btn" data-climb="-1">▼ DESCE</button>' +
       '<div id="alt-val">PARA</div>';
     document.body.appendChild(box);
+
+    var hints = document.createElement('div');
+    hints.id = 'pad-hints';
+    hints.innerHTML = 'R1 SOBE · R2 DESCE · L3 PARA<br>L1 FREIO · L2 TURBO';
+    document.body.appendChild(hints);
+
     var valEl = document.getElementById('alt-val');
 
     function setClimb(c) {
@@ -64,7 +72,16 @@
       if (e.code === 'PageUp') setClimb(1);
       if (e.code === 'PageDown') setClimb(-1);
       if (e.code === 'Home') setClimb(0);
+      if (e.code === 'KeyQ') window.__FPV_AIRBRAKE = true;
+      if (e.code === 'KeyE') window.__FPV_TURBO = true;
     });
+    window.addEventListener('keyup', function (e) {
+      if (e.code === 'KeyQ') window.__FPV_AIRBRAKE = false;
+      if (e.code === 'KeyE') window.__FPV_TURBO = false;
+    });
+
+    window.__FPV_AIRBRAKE = false;
+    window.__FPV_TURBO = false;
 
     var prevR1 = false, prevR2 = false, prevL3 = false;
     function pollPad() {
@@ -77,13 +94,23 @@
           var r2 = !!(p.buttons[7] && p.buttons[7].pressed);
           var l1 = !!(p.buttons[4] && p.buttons[4].pressed);
           var l2 = !!(p.buttons[6] && p.buttons[6].pressed);
-          // L3 = botao 10 (clique do stick esquerdo) -> PARA / neutro
           var l3 = !!(p.buttons[10] && p.buttons[10].pressed);
-          if (r1 || l1) { if (!prevR1) setClimb(1); prevR1 = true; } else prevR1 = false;
-          if (r2 || l2) { if (!prevR2) setClimb(-1); prevR2 = true; } else prevR2 = false;
+
+          if (r1) { if (!prevR1) setClimb(1); prevR1 = true; } else prevR1 = false;
+          if (r2) { if (!prevR2) setClimb(-1); prevR2 = true; } else prevR2 = false;
           if (l3) { if (!prevL3) setClimb(0); prevL3 = true; } else prevL3 = false;
+
+          window.__FPV_AIRBRAKE = l1;
+          window.__FPV_TURBO = l2;
         }
       } catch (e) {}
+      var h = document.getElementById('pad-hints');
+      if (h) {
+        h.innerHTML =
+          'R1 SOBE · R2 DESCE · L3 PARA<br>' +
+          '<span class="' + (window.__FPV_AIRBRAKE ? 'on' : '') + '">L1 FREIO</span> · ' +
+          '<span class="' + (window.__FPV_TURBO ? 'on' : '') + '">L2 TURBO</span>';
+      }
       requestAnimationFrame(pollPad);
     }
     requestAnimationFrame(pollPad);
@@ -94,6 +121,7 @@
       var deploy = document.getElementById('btn-deploy');
       var walk = deploy && deploy.classList.contains('show');
       box.classList.toggle('show', !!flying && !walk);
+      hints.classList.toggle('show', !!flying && !walk);
     }, 300);
 
     setClimb(0);
