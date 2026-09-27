@@ -1,0 +1,223 @@
+================================================================================
+HANDOFF COMPLETO — FPV DRONE SIM
+Documento para o Grok Build refazer / melhorar o jogo
+Data do handoff: 2026-09-27
+Autor do projeto: tsddev016
+================================================================================
+
+OBJETIVO DO JOGO
+----------------
+Simulador de drone FPV (First Person View) em 3D, estilo freestyle / racing.
+Deve rodar no navegador (PC, celular, TV) e ter versão desktop (Electron).
+Física e controles próximos de drone real (acro, rates altos, 360°).
+
+REPOSITÓRIOS
+------------
+Web (principal):
+  https://github.com/tsddev016/fpv-drone-sim
+  Deploy: https://fpvdronesimecru.vercel.app/
+
+Desktop (Electron):
+  https://github.com/tsddev016/fpv-drone-sim-pc
+
+
+================================================================================
+1. ARQUITETURA ATUAL (IMPORTANTE)
+================================================================================
+
+O jogo NÃO é um monolito limpo. Funciona assim:
+
+1) index.html — UI, menus, HUD, CSS, sticks touch
+2) app.js — entry point (module). Carrega scripts de patch e importa game-loader.js
+3) game-loader.js — BAIXA o core antigo de um commit fixo no GitHub e aplica
+   dezenas de string.replace() em runtime (física, sticks, mapas, tutorial).
+4) Scripts de patch laterais (carregados por app.js):
+   - throttle-control.js
+   - drone-realistic.js
+   - camera-damage.js
+   - maps-boost.js
+   - visual-boost.js
+   - ultra-mode.js
+   - tutorial-boost.js
+   - menu-cursor.js
+   - unlock-code.js
+   - ui-fix.js
+   - shop.js / shop-boot.js / profile.js
+   - models-boost.js
+   - gamepad-fix.js
+
+Core original (commit fixo usado pelo loader):
+  https://github.com/tsddev016/fpv-drone-sim/blob/38af95524f1acbac5f243d4dc1ed4a2d13fa2d19/app.js
+
+PROBLEMA PRINCIPAL:
+  Patches por string.replace são frágeis.
+  RECOMENDAÇÃO: reescrever o core limpo em módulos ES6, sem blob patch.
+  Manter Three.js. Opcional: versão desktop depois.
+
+
+================================================================================
+2. CONTROLES (COMO DEVEM FUNCIONAR)
+================================================================================
+
+ALTURA — 3 estados:
+  SOBE  = climb +1
+  PARA  = climb  0  (neutro / hover — NÃO subir sozinho)
+  DESCE = climb -1
+
+Touch: 3 botões na direita (SOBE | PARA | DESCE)
+Teclado: PageUp = sobe | Home = para | PageDown = desce
+Gamepad:
+  R1 = SOBE
+  R2 = DESCE
+  L3 (clique stick esquerdo) = PARA
+  L1 = FREIO DE AR (segura) — NÃO controla altura
+  L2 = TURBO (segura) — NÃO controla altura
+  Q = freio | E = turbo (teclado)
+
+IMPORTANTE:
+  L1/L2 NÃO podem fazer a mesma coisa que R1/R2.
+  No neutro (PARA), o drone deve pairar, não subir infinito.
+
+Sticks:
+  Esquerdo: yaw / movimento
+  Direito: pitch / roll
+
+Menu:
+  D-pad move cursor virtual | A confirma | B volta
+
+
+================================================================================
+3. FÍSICA DE VOO
+================================================================================
+
+- Modo ACRO (padrão): rates altos (~1400°/s), 360°, flips
+- Modo ANGLE: limita inclinação
+- No ACRO, NÃO aplicar limitação de angle
+- Cambalhota → perde velocidade
+- Mergulho → ganha velocidade horizontal
+- Subindo → perde velocidade horizontal
+- Vento dinâmico (modo Ultra)
+- Freio L1: amortece velocity + angularVelocity
+- Turbo L2: empurra na direção forward
+- Colisão chão + prédios (sphere-AABB)
+
+Flags globais:
+  window.__FPV_CLIMB, __FPV_THROTTLE, __FPV_AIRBRAKE, __FPV_TURBO
+  window.__FPV_WIND, __FPV_DRONE, __FPV_SCENE, __FPV_CAMERA
+  window.__FPV_AFTER_MAP, window.__FPV_CAM_HIT, window.THREE
+
+
+================================================================================
+4. CÂMERA (DANO)
+================================================================================
+
+- Cada batida → trinca (CAM 1/5 ... 5/5)
+- Overlay CSS de rachaduras
+- 5ª batida → quebra → reset automático
+- Alta velocidade (~10 m/s) → quebra instantânea
+
+
+================================================================================
+5. MODELO DO DRONE
+================================================================================
+
+Procedural Three.js: placas carbono, FC, ESCs, bateria, braços X, motores,
+hélices girando, câmera FPV, antena, LEDs, pés, stickers canvas.
+
+USUÁRIO QUER: GLB realista + casas/árvores/carros free da internet.
+
+
+================================================================================
+6. MAPAS
+================================================================================
+
+1) abandoned — Cidade Abandonada
+2) city — Cidade Ativa
+3) freestyle — gates
+4) forest_night — lanterna (F) + VHS (V)
+5) racing — portões
+
+Janelas quebráveis, texturas canvas, modo Ultra.
+
+
+================================================================================
+7. TUTORIAL (8 PASSOS)
+================================================================================
+
+1. Mover sticks
+2. Subir (~3 m)
+3. Pairar (PARA / L3)
+4. Ir em frente
+5. Girar
+6. Inclinar
+7. CAM ou MODO
+8. Pronto
+
+
+================================================================================
+8. LOJA / CÓDIGO
+================================================================================
+
+Código secreto: FPV-KING-360
+Loja de cores / perfil / scroll nos menus
+
+
+================================================================================
+9. CHECKLIST FEITO
+================================================================================
+
+[x] SOBE/PARA/DESCE + neutro
+[x] R1/R2/L3 + L1 freio + L2 turbo
+[x] ACRO 360°
+[x] Física flip/dive/climb
+[x] Câmera trincas
+[x] Drone procedural
+[x] 5 mapas + Ultra + VHS
+[x] Tutorial 8 passos
+[x] Código secreto
+[x] Repo PC Electron
+
+[ ] GLB profissionais
+[ ] Core limpo sem string.replace
+[ ] Instalador .exe testado
+[ ] APK
+[ ] Física tipo Betaflight
+
+
+================================================================================
+10. BUGS RECORRENTES
+================================================================================
+
+- Subia infinito no neutro
+- 360 não funcionava
+- L1/L2 = R1/R2 (errado)
+- Scroll quebrado
+- Modelo cubinho
+- Tutorial longo
+
+
+================================================================================
+11. O QUE O USUÁRIO QUER DO GROK BUILD
+================================================================================
+
+- Refazer o jogo INTEIRO, limpo e organizado
+- Modelos 3D free: casas, árvores, carros, drone GLB
+  Fontes: kenney.nl, poly.pizza, opengameart, Quaternius, KayKit
+- Stack: JS/Three.js (web). Desktop: Electron ou Godot ou Unity C#
+- NÃO misturar VB+C+++Python+C# no mesmo runtime
+- Física realista, tutorial fácil, instalador PC depois
+- UI e docs em PT-BR
+
+FASES SUGERIDAS:
+1) Core ES6 limpo + Three.js + mesmos controles
+2) Assets GLB + 4 mapas ricos
+3) Câmera damage, tutorial, loja, código
+4) Electron/Godot + instalador
+5) Mobile (Capacitor)
+
+Código: FPV-KING-360
+Controles: R1 sobe | R2 desce | L3 para | L1 freio | L2 turbo
+
+================================================================================
+FIM DO HANDOFF
+================================================================================
