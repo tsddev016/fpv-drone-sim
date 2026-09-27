@@ -71,13 +71,25 @@ code = code.replace(
   '  force.x -= velocity.x * drag * CONFIG.mass;\n' +
   '  force.y -= velocity.y * drag * CONFIG.mass * 0.65;\n' +
   '  force.z -= velocity.z * drag * CONFIG.mass;\n' +
-  '  velocity.add(force.divideScalar(CONFIG.mass).multiplyScalar(dt));'
+  '  velocity.add(force.divideScalar(CONFIG.mass).multiplyScalar(dt));\n' +
+  '  {\n' +
+  '    const w = window.__FPV_WIND || { x: 0, z: 0 };\n' +
+  '    velocity.x += (w.x || 0) * dt * 1.8;\n' +
+  '    velocity.z += (w.z || 0) * dt * 1.8;\n' +
+  '    if (window.__FPV_AIRBRAKE) {\n' +
+  '      velocity.x *= Math.pow(0.88, dt * 60);\n' +
+  '      velocity.z *= Math.pow(0.88, dt * 60);\n' +
+  '      velocity.y *= Math.pow(0.94, dt * 60);\n' +
+  '      angularVelocity.multiplyScalar(Math.pow(0.92, dt * 60));\n' +
+  '    }\n' +
+  '    if (window.__FPV_TURBO) {\n' +
+  '      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(drone.quaternion);\n' +
+  '      velocity.addScaledVector(forward, 14 * dt);\n' +
+  '      velocity.y += up.y * 4 * dt;\n' +
+  '    }\n' +
+  '  }'
 );
-code = code.replace(
-  "if (controlScheme === 'arcade') {\n    const anyMove = stickMag > 0.05;\n    if (anyMove) {\n      if (holdAlt === null) holdAlt = drone.position.y;\n    } else {\n      holdAlt = null;\n    }\n    if (holdAlt !== null) {\n      const err = holdAlt - drone.position.y;\n      const climbCmd = THREE.MathUtils.clamp(err * 1.8 - velocity.y * 1.2, -0.35, 0.35);\n      const uy = Math.max(0.55, up.y);\n      thrustMul = ((CONFIG.mass * CONFIG.gravity) + climbCmd * CONFIG.mass * 9) / uy;\n      thrustMul = THREE.MathUtils.clamp(thrustMul, 0, CONFIG.maxThrust * 1.05);\n      throttle = THREE.MathUtils.clamp(thrustMul / CONFIG.maxThrust, 0, 1);\n    }\n  }",
-  "if (controlScheme === 'arcade' && mode !== 'acro') {\n    const anyMove = stickMag > 0.05;\n    if (anyMove) {\n      if (holdAlt === null) holdAlt = drone.position.y;\n    } else {\n      holdAlt = null;\n    }\n    if (holdAlt !== null) {\n      const err = holdAlt - drone.position.y;\n      const climbCmd = THREE.MathUtils.clamp(err * 1.8 - velocity.y * 1.2, -0.35, 0.35);\n      const uy = Math.max(0.55, up.y);\n      thrustMul = ((CONFIG.mass * CONFIG.gravity) + climbCmd * CONFIG.mass * 9) / uy;\n      thrustMul = THREE.MathUtils.clamp(thrustMul, 0, CONFIG.maxThrust * 1.05);\n      throttle = THREE.MathUtils.clamp(thrustMul / CONFIG.maxThrust, 0, 1);\n    }\n  }"
-);
-
+code = code.replace("if (controlScheme === 'arcade') {\n    const anyMove = stickMag > 0.05;\n    if (anyMove) {\n      if (holdAlt === null) holdAlt = drone.position.y;\n    } else {\n      holdAlt = null;\n    }\n    if (holdAlt !== null) {\n      const err = holdAlt - drone.position.y;\n      const climbCmd = THREE.MathUtils.clamp(err * 1.8 - velocity.y * 1.2, -0.35, 0.35);\n      const uy = Math.max(0.55, up.y);\n      thrustMul = ((CONFIG.mass * CONFIG.gravity) + climbCmd * CONFIG.mass * 9) / uy;\n      thrustMul = THREE.MathUtils.clamp(thrustMul, 0, CONFIG.maxThrust * 1.05);\n      throttle = THREE.MathUtils.clamp(thrustMul / CONFIG.maxThrust, 0, 1);\n    }\n  }", "if (controlScheme === 'arcade' && mode !== 'acro') {\n    const anyMove = stickMag > 0.05;\n    if (anyMove) {\n      if (holdAlt === null) holdAlt = drone.position.y;\n    } else {\n      holdAlt = null;\n    }\n    if (holdAlt !== null) {\n      const err = holdAlt - drone.position.y;\n      const climbCmd = THREE.MathUtils.clamp(err * 1.8 - velocity.y * 1.2, -0.35, 0.35);\n      const uy = Math.max(0.55, up.y);\n      thrustMul = ((CONFIG.mass * CONFIG.gravity) + climbCmd * CONFIG.mass * 9) / uy;\n      thrustMul = THREE.MathUtils.clamp(thrustMul, 0, CONFIG.maxThrust * 1.05);\n      throttle = THREE.MathUtils.clamp(thrustMul / CONFIG.maxThrust, 0, 1);\n    }\n  }");
 code = code.replace(
   'velocity.y = THREE.MathUtils.clamp(velocity.y, -20, 12);',
   'velocity.y = THREE.MathUtils.clamp(velocity.y, -28, 22);\n' +
@@ -92,7 +104,6 @@ code = code.replace(
   '      const climbDrag = Math.min(0.25, velocity.y * 0.03);\n' +
   '      velocity.x *= Math.max(0.9, 1 - climbDrag * dt * 6);\n' +
   '      velocity.z *= Math.max(0.9, 1 - climbDrag * dt * 6);\n' +
-  '      velocity.y *= Math.max(0.94, 1 - 0.04 * dt * 4);\n' +
   '    }\n' +
   '    if (velocity.y < -2.5) {\n' +
   '      const dive = Math.min(1.8, -velocity.y * 0.12);\n' +
@@ -100,37 +111,24 @@ code = code.replace(
   '      if (dir.lengthSq() > 0.01) {\n' +
   '        dir.normalize().multiplyScalar(dive * dt * 6);\n' +
   '        velocity.x += dir.x; velocity.z += dir.z;\n' +
-  '      } else {\n' +
-  '        velocity.y -= dive * dt * 2;\n' +
   '      }\n' +
   '    }\n' +
-  '    if (spd > 8) {\n' +
-  '      velocity.multiplyScalar(1 - Math.min(0.08, (spd - 8) * 0.004) * dt * 10);\n' +
-  '    }\n' +
+  '    if (spd > 8) velocity.multiplyScalar(1 - Math.min(0.08, (spd - 8) * 0.004) * dt * 10);\n' +
   '  }'
 );
-
 code = code.replace(
   'if (nextPos.y < 0.08) {\n    nextPos.y = 0.08;\n    if (velocity.y < 0) velocity.y = 0;\n    velocity.x *= 0.6; velocity.z *= 0.6;\n    angularVelocity.multiplyScalar(0.4);\n    holdAlt = null;\n  }',
   'if (nextPos.y < 0.08) {\n    const impactSpd = velocity.length();\n    nextPos.y = 0.08;\n    if (velocity.y < 0) velocity.y = 0;\n    velocity.x *= 0.55; velocity.z *= 0.55;\n    angularVelocity.multiplyScalar(0.35);\n    holdAlt = null;\n    if (impactSpd > 2.5 && typeof window.__FPV_CAM_HIT === \'function\') window.__FPV_CAM_HIT(impactSpd);\n  }'
 );
-
 code = code.replace("showGameChrome(false);\n  document.getElementById('btn-menu')?.classList.remove('hidden');\n  document.getElementById('btn-deploy')?.classList.add('show');", "showGameChrome(false);\n  document.getElementById('btn-menu')?.classList.remove('hidden');\n  document.getElementById('btn-cam')?.classList.remove('hidden');\n  document.getElementById('btn-deploy')?.classList.add('show');");
-
-code = code.replace(
-  /const MAPS = \{[\s\S]*?\};/,
-  `const MAPS = {
+code = code.replace(/const MAPS = \{[\s\S]*?\};/, `const MAPS = {
   abandoned: { name: 'Cidade Abandonada', icon: 'A', fog: 0x6a7a88, ground: 0x4a4a42, sky: 0x6a7a88 },
   city: { name: 'Cidade Ativa', icon: 'C', fog: 0x87b0d0, ground: 0x3a3a40, sky: 0x87b0d0 },
   freestyle: { name: 'Freestyle', icon: 'F', fog: 0x6a8faf, ground: 0x4a5a3a, sky: 0x6a8faf },
   forest_night: { name: 'Floresta Noturna', icon: 'N', fog: 0x050510, ground: 0x1a1a14, sky: 0x050510 },
   racing: { name: 'Racing', icon: 'R', fog: 0x87CEEB, ground: 0x3a7d3a, sky: 0x87CEEB },
-};`
-);
-code = code.replace(
-  "if (mn) mn.textContent = m.name.toUpperCase();",
-  "window.__FPV_CURRENT_MAP = mapId;\n  window.__FPV_SCENE = scene;\n  window.__FPV_DRONE = drone;\n  window.__FPV_CAMERA = camera;\n  if (typeof window.__FPV_AFTER_MAP === 'function') { try { window.__FPV_AFTER_MAP(mapId, scene, addEnv, THREE, drone, camera); } catch(e) { console.warn(e); } }\n  if (mn) mn.textContent = m.name.toUpperCase();"
-);
+};`);
+code = code.replace("if (mn) mn.textContent = m.name.toUpperCase();", "window.__FPV_CURRENT_MAP = mapId;\n  window.__FPV_SCENE = scene;\n  window.__FPV_DRONE = drone;\n  window.__FPV_CAMERA = camera;\n  window.THREE = THREE;\n  if (typeof window.__FPV_AFTER_MAP === 'function') { try { window.__FPV_AFTER_MAP(mapId, scene, addEnv, THREE, drone, camera); } catch(e) { console.warn(e); } }\n  if (mn) mn.textContent = m.name.toUpperCase();");
 
 window.__FPV_CLIMB = 0;
 const blob = new Blob([code], { type: 'text/javascript' });
