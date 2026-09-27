@@ -90,10 +90,7 @@
     broken = true; hits = MAX_HITS; updateVisual();
     try { if (typeof window.showMsg === 'function') window.showMsg('CAMERA QUEBRADA'); } catch (e) {}
     setTimeout(function () {
-      try {
-        var btn = document.getElementById('btn-reset');
-        if (btn) btn.click();
-      } catch (e) {}
+      try { var btn = document.getElementById('btn-reset'); if (btn) btn.click(); } catch (e) {}
       setTimeout(resetCamera, 400);
     }, 900);
   }
@@ -131,27 +128,36 @@
       if (impact >= MIN_IMPACT) registerHit(impact);
     }
 
-    if (scene && THREE && approxSpeed >= MIN_IMPACT * 0.8) {
+    if (scene && THREE && approxSpeed >= MIN_IMPACT * 0.7) {
       var hitSolid = false;
+      var droneR = 0.4;
+      var box = new THREE.Box3();
+      var sphere = new THREE.Sphere(new THREE.Vector3(pos.x, pos.y, pos.z), droneR);
       scene.traverse(function (obj) {
         if (hitSolid || !obj.isMesh || !obj.visible) return;
-        if (obj.userData && obj.userData.breakable) return;
-        if (obj.geometry && (obj.geometry.type === 'PlaneGeometry' || obj.type === 'GridHelper')) return;
-        var wp = new THREE.Vector3();
-        try { obj.getWorldPosition(wp); } catch (e) { return; }
-        var dist = wp.distanceTo(pos);
-        var radius = 1.2;
+        if (obj.userData && (obj.userData.breakable || obj.userData.noCollision)) return;
+        if (!obj.geometry) return;
+        if (obj.geometry.type === 'PlaneGeometry') return;
+        if (obj.type === 'GridHelper') return;
+        var p = obj.parent;
+        while (p) {
+          if (p === drone || (p.userData && p.userData.realistic)) return;
+          p = p.parent;
+        }
         try {
-          if (obj.geometry && !obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
-          var box = obj.geometry && obj.geometry.boundingBox;
-          if (box) {
-            var sx = box.max.x - box.min.x, sy = box.max.y - box.min.y, sz = box.max.z - box.min.z;
-            radius = Math.max(0.5, Math.min(4, Math.max(sx, sy, sz) * 0.35));
-          }
+          box.setFromObject(obj);
+          if (box.isEmpty()) return;
+          var size = new THREE.Vector3();
+          box.getSize(size);
+          if (size.x > 40 || size.z > 40) return;
+          if (size.y < 0.08 && size.x > 8) return;
+          if (box.intersectsSphere(sphere)) hitSolid = true;
         } catch (e) {}
-        if (dist < radius + 0.45 && dist > 0.05) hitSolid = true;
       });
-      if (hitSolid) registerHit(approxSpeed);
+      if (hitSolid) {
+        registerHit(approxSpeed);
+        try { if (pos.y < 3) drone.position.y += 0.12; } catch (e) {}
+      }
     }
 
     lastPos.x = pos.x; lastPos.y = pos.y; lastPos.z = pos.z;
