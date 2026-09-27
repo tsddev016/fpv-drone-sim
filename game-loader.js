@@ -18,7 +18,6 @@ if (!code) throw lastErr || new Error('nao carregou');
 code = code.replace(/import\s*\*\s*as\s*THREE\s*from\s*['"]three['"]\s*;?/, "import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';");
 code = code.replace("let mode = isTouchDevice ? 'angle' : 'acro';", "let mode = 'acro';");
 code = code.replace(/maxRate:\s*saved\.rate\s*\?\?\s*800/, 'maxRate: saved.rate ?? 1400');
-code = code.replace(/gravity:\s*9\.81/, 'gravity: 9.81');
 code = code.replace('input.pitch = -ry * sens;\n    input.roll = rx * sens;', 'input.pitch = ry * sens;\n    input.roll = -rx * sens;');
 code = code.replace('input.pitch = applyExpo(applyDeadzone(-sticks.right.y, dz), expo) * sens;\n    input.roll = applyExpo(applyDeadzone(sticks.right.x, dz), expo) * sens;', 'input.pitch = applyExpo(applyDeadzone(sticks.right.y, dz), expo) * sens;\n    input.roll = applyExpo(applyDeadzone(-sticks.right.x, dz), expo) * sens;');
 code = code.replace("if (k['ArrowUp']) input.pitch = -1;\n    if (k['ArrowDown']) input.pitch = 1;\n    if (k['ArrowLeft']) input.roll = -1;\n    if (k['ArrowRight']) input.roll = 1;", "if (k['ArrowUp']) input.pitch = 1;\n    if (k['ArrowDown']) input.pitch = -1;\n    if (k['ArrowLeft']) input.roll = 1;\n    if (k['ArrowRight']) input.roll = -1;");
@@ -78,7 +77,44 @@ code = code.replace(
   "if (controlScheme === 'arcade') {\n    const anyMove = stickMag > 0.05;\n    if (anyMove) {\n      if (holdAlt === null) holdAlt = drone.position.y;\n    } else {\n      holdAlt = null;\n    }\n    if (holdAlt !== null) {\n      const err = holdAlt - drone.position.y;\n      const climbCmd = THREE.MathUtils.clamp(err * 1.8 - velocity.y * 1.2, -0.35, 0.35);\n      const uy = Math.max(0.55, up.y);\n      thrustMul = ((CONFIG.mass * CONFIG.gravity) + climbCmd * CONFIG.mass * 9) / uy;\n      thrustMul = THREE.MathUtils.clamp(thrustMul, 0, CONFIG.maxThrust * 1.05);\n      throttle = THREE.MathUtils.clamp(thrustMul / CONFIG.maxThrust, 0, 1);\n    }\n  }",
   "if (controlScheme === 'arcade' && mode !== 'acro') {\n    const anyMove = stickMag > 0.05;\n    if (anyMove) {\n      if (holdAlt === null) holdAlt = drone.position.y;\n    } else {\n      holdAlt = null;\n    }\n    if (holdAlt !== null) {\n      const err = holdAlt - drone.position.y;\n      const climbCmd = THREE.MathUtils.clamp(err * 1.8 - velocity.y * 1.2, -0.35, 0.35);\n      const uy = Math.max(0.55, up.y);\n      thrustMul = ((CONFIG.mass * CONFIG.gravity) + climbCmd * CONFIG.mass * 9) / uy;\n      thrustMul = THREE.MathUtils.clamp(thrustMul, 0, CONFIG.maxThrust * 1.05);\n      throttle = THREE.MathUtils.clamp(thrustMul / CONFIG.maxThrust, 0, 1);\n    }\n  }"
 );
-code = code.replace('velocity.y = THREE.MathUtils.clamp(velocity.y, -20, 12);', 'velocity.y = THREE.MathUtils.clamp(velocity.y, -25, 25);');
+
+code = code.replace(
+  'velocity.y = THREE.MathUtils.clamp(velocity.y, -20, 12);',
+  'velocity.y = THREE.MathUtils.clamp(velocity.y, -28, 22);\n' +
+  '  {\n' +
+  '    const spd = velocity.length();\n' +
+  '    const tumble = angularVelocity.length();\n' +
+  '    if (tumble > 1.5) {\n' +
+  '      const loss = Math.min(0.35, (tumble - 1.5) * 0.08);\n' +
+  '      velocity.multiplyScalar(Math.max(0.82, 1 - loss * dt * 8));\n' +
+  '    }\n' +
+  '    if (velocity.y > 1.2) {\n' +
+  '      const climbDrag = Math.min(0.25, velocity.y * 0.03);\n' +
+  '      velocity.x *= Math.max(0.9, 1 - climbDrag * dt * 6);\n' +
+  '      velocity.z *= Math.max(0.9, 1 - climbDrag * dt * 6);\n' +
+  '      velocity.y *= Math.max(0.94, 1 - 0.04 * dt * 4);\n' +
+  '    }\n' +
+  '    if (velocity.y < -2.5) {\n' +
+  '      const dive = Math.min(1.8, -velocity.y * 0.12);\n' +
+  '      const dir = new THREE.Vector3(velocity.x, 0, velocity.z);\n' +
+  '      if (dir.lengthSq() > 0.01) {\n' +
+  '        dir.normalize().multiplyScalar(dive * dt * 6);\n' +
+  '        velocity.x += dir.x; velocity.z += dir.z;\n' +
+  '      } else {\n' +
+  '        velocity.y -= dive * dt * 2;\n' +
+  '      }\n' +
+  '    }\n' +
+  '    if (spd > 8) {\n' +
+  '      velocity.multiplyScalar(1 - Math.min(0.08, (spd - 8) * 0.004) * dt * 10);\n' +
+  '    }\n' +
+  '  }'
+);
+
+code = code.replace(
+  'if (nextPos.y < 0.08) {\n    nextPos.y = 0.08;\n    if (velocity.y < 0) velocity.y = 0;\n    velocity.x *= 0.6; velocity.z *= 0.6;\n    angularVelocity.multiplyScalar(0.4);\n    holdAlt = null;\n  }',
+  'if (nextPos.y < 0.08) {\n    const impactSpd = velocity.length();\n    nextPos.y = 0.08;\n    if (velocity.y < 0) velocity.y = 0;\n    velocity.x *= 0.55; velocity.z *= 0.55;\n    angularVelocity.multiplyScalar(0.35);\n    holdAlt = null;\n    if (impactSpd > 2.5 && typeof window.__FPV_CAM_HIT === \'function\') window.__FPV_CAM_HIT(impactSpd);\n  }'
+);
+
 code = code.replace("showGameChrome(false);\n  document.getElementById('btn-menu')?.classList.remove('hidden');\n  document.getElementById('btn-deploy')?.classList.add('show');", "showGameChrome(false);\n  document.getElementById('btn-menu')?.classList.remove('hidden');\n  document.getElementById('btn-cam')?.classList.remove('hidden');\n  document.getElementById('btn-deploy')?.classList.add('show');");
 
 code = code.replace(
