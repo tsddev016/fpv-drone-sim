@@ -1,4 +1,13 @@
 // Loader + patch: throttle dedicado (__FPV_THROTTLE)
+// carrega o analógico de altura
+(function loadThrottleUI() {
+  if (document.getElementById('throttle-control-js')) return;
+  var s = document.createElement('script');
+  s.id = 'throttle-control-js';
+  s.src = 'throttle-control.js';
+  document.head.appendChild(s);
+})();
+
 setTimeout(function () {
   try {
     var el = document.getElementById('loading');
@@ -41,14 +50,11 @@ try {
   }
   if (!code) throw lastErr || new Error('não carregou');
 
-  // Three.js por URL completa
   code = code.replace(
     /import\s*\*\s*as\s*THREE\s*from\s*['"]three['"]\s*;?/,
     "import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';"
   );
 
-  // === PATCH: throttle dedicado do analógico de altura ===
-  // No fim do readInput, sobrescreve throttle se o slider estiver ativo
   if (!code.includes('__FPV_THROTTLE_PATCH')) {
     code = code.replace(
       'throttle = input.throttle;\n}',
@@ -59,7 +65,6 @@ try {
         '  window.__FPV_THROTTLE_PATCH = 1;\n' +
         '}'
     );
-    // No arcade, não forçar só hover quando o slider existe
     code = code.replace(
       'input.yaw = lx * 0.12 * sens;\n    input.throttle = hoverT;',
       'input.yaw = lx * 0.12 * sens;\n    input.throttle = (typeof window.__FPV_THROTTLE === "number") ? window.__FPV_THROTTLE : hoverT;'
